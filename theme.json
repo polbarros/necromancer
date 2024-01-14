@@ -225,13 +225,7 @@
              "link_hover": "#FFFF00",
              "link_selected": "#FFFFFF"
          },
-       "font":
-         {
-             "name": "Retro Gaming.ttf",
-             "size": "12",
-             "bold": "0",
-             "italic": "0"
-         },
+
          "misc":
          {
              "border_width": "2",
@@ -266,13 +260,7 @@
              "link_hover": "#FFFF00",
              "link_selected": "#FFFFFF"
          },
-       "font":
-         {
-             "name": "Retro Gaming.ttf",
-             "size": "12",
-             "bold": "0",
-             "italic": "0"
-         },
+
          "misc":
          {
              "border_width": "2",

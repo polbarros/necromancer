@@ -108,7 +108,7 @@ class Combat(State):
                                                                                     (167, 40)),
                                                                text="ATTACK ROLL 1d20",
                                                                manager=self.manager_combat,
-                                                               tool_tip_text="Roll a dice of <b>20 sides</b> to attack",
+                                                               tool_tip_text="Roll a dice of <b>20</b> sides to attack",
                                                                object_id='#button_attack_1d20')
 
         self.button_attack_1d12 = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((self.game.W - 180,
@@ -116,7 +116,7 @@ class Combat(State):
                                                                                          (167, 40)),
                                                                text="ATTACK ROLL 1d12",
                                                                manager=self.manager_combat,
-                                                               tool_tip_text="Roll a dice of <b>12 sides</b> to attack",
+                                                               tool_tip_text="Roll a dice of <b>12</b> sides to attack",
                                                                object_id="#button_attack_1d12")
 
         self.button_strategic = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((self.game.W - 180,
@@ -384,7 +384,7 @@ class Combat(State):
 
     def roll_damage(self, attacker):
         # Función para realizar múltiples tiradas de dados de daño en función del tipo de guerrero/enemigo.
-        self.list_dices = []  # Lista de resultados de las tiradas. Inicialmente vacia.
+        self.list_dices = []  # Lista de resultados de las tiradas. Inicialmente vacía.
         dict_dices = {
             "Samurai": (2, 6),
             "Kunoichi": (3, 4),
