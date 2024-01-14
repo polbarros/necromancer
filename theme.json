@@ -1,0 +1,300 @@
+{
+  "text_entry_line":
+  {
+    "colours":
+    {
+      "dark_bg": "#ded6de",
+      "selected_bg": "#73817b",
+      "normal_text": "#392c31",
+      "selected_text": "#5a555a",
+      "normal_border": "#392c31",
+      "text_cursor": "#392c31"
+    },
+    "misc":
+    {
+      "shape": "rectangle",
+      "border_width": "2",
+      "shadow_width": "2"
+    }
+  },
+  "button":
+  {
+    "colours":
+    {
+      "normal_bg": "#a49da4",
+      "hovered_bg": "#83898b",
+      "disabled_bg": "#25292e",
+      "selected_bg": "#25292e",
+      "active_bg": "#193784",
+      "normal_text": "#392c31",
+      "hovered_text": "#ded6de",
+      "selected_text": "#ded6de",
+      "disabled_text": "#6d736f",
+      "active_text": "#6d736f",
+      "normal_border": "#392c31",
+      "hovered_border": "#B0B0B0",
+      "disabled_border": "#83918b",
+      "selected_border": "#83918b",
+      "active_border": "#83918b",
+      "normal_text_shadow": "#10101070",
+      "hovered_text_shadow": "#10101070",
+      "disabled_text_shadow": "#10101070",
+      "selected_text_shadow": "#10101070",
+      "active_text_shadow": "#10101070"
+    },
+    "font":
+    {
+      "name": "Retro Gaming.ttf",
+      "size": "12",
+      "bold": "0",
+      "italic": "0",
+      "regular_resource":
+      {
+        "package": "assets.font",
+        "resource": "Retro Gaming.ttf"
+      }
+    },
+    "misc":
+    {
+      "border_width": "2",
+      "shadow_width": "0",
+      "tool_tip_delay": "0.85",
+      "text_horiz_alignment": "center",
+      "text_vert_alignment": "center",
+      "text_horiz_alignment_padding": "1",
+      "text_vert_alignment_padding": "1",
+      "text_shadow_size": "0",
+      "text_shadow_offset": "0,0",
+      "state_transitions":
+      {
+        "normal_hovered": "0.1",
+        "hovered_normal": "0.1"
+      }
+    }
+  },
+  "#button_attack_1d12":
+  {
+    "colours":
+    {
+      "normal_bg": "#c66668",
+      "hovered_bg": "#913a52",
+      "disabled_bg": "#25292e",
+      "selected_bg": "#25292e",
+      "active_bg": "#193784",
+      "normal_text": "#392c31",
+      "hovered_text": "#ded6de",
+      "selected_text": "#ded6de",
+      "disabled_text": "#6d736f",
+      "active_text": "#6d736f",
+      "normal_border": "#981f30",
+      "hovered_border": "#B0B0B0",
+      "disabled_border": "#83918b",
+      "selected_border": "#83918b",
+      "active_border": "#83918b",
+      "normal_text_shadow": "#10101070",
+      "hovered_text_shadow": "#10101070",
+      "disabled_text_shadow": "#10101070",
+      "selected_text_shadow": "#10101070",
+      "active_text_shadow": "#10101070"
+    }
+  },
+  "#button_heal":
+  {
+    "images":
+    {
+      "normal_image":
+      {
+        "package": "assets.sprites",
+        "resource": "heal_button_img.png",
+        "sub_surface_rect": "0,0,0,0"
+      }
+    }
+  },
+  "#button_bomb":
+  {
+    "images":
+    {
+      "normal_image":
+      {
+        "package": "assets.sprites",
+        "resource": "bomb_button_img.png",
+        "sub_surface_rect": "0,0,0,0"
+      }
+    }
+  },
+  "#button_r_stance":
+  {
+    "images":
+    {
+      "normal_image":
+      {
+        "package": "assets.sprites",
+        "resource": "stance_button_img.png",
+        "sub_surface_rect": "0,0,0,0"
+      }
+    }
+  },
+  "#button_r_roll":
+  {
+    "images":
+    {
+      "normal_image":
+      {
+        "package": "assets.sprites",
+        "resource": "roll_button_img.png",
+        "sub_surface_rect": "0,0,0,0"
+      }
+    }
+  },
+  "#warrior_health_bar":
+     {
+         "colours":
+         {
+             "normal_text": "#392c31",
+             "text_shadow": "#777777",
+             "normal_border": "#392c31",
+             "filled_bar": "#73817b",
+             "unfilled_bar": "#c5b2bd"
+         },
+         "font":
+         {
+             "name": "Retro Gaming.ttf",
+             "size": "12",
+             "bold": "0",
+             "italic": "0"
+         },
+       "misc":
+       {
+         "shape": "rectangle",
+         "border_width": "2",
+         "shadow_width": "2"
+       }
+     },
+  "#last_enemy_health_bar":
+     {
+         "colours":
+         {
+             "normal_text": "#392c31",
+             "text_shadow": "#777777",
+             "normal_border": "#392c31",
+             "filled_bar": "#981f30",
+             "unfilled_bar": "#c5b2bd"
+         },
+         "font":
+         {
+             "name": "Retro Gaming.ttf",
+             "size": "12",
+             "bold": "0",
+             "italic": "0"
+         },
+       "misc":
+       {
+         "shape": "rectangle",
+         "border_width": "2",
+         "shadow_width": "2"
+       }
+     },
+  "tool_tip":
+     {
+         "misc":
+         {
+            "rect_width": "200"
+         }
+     },
+     "tool_tip.text_box":
+     {
+         "colours":
+         {
+             "dark_bg":"#5a555a",
+             "normal_border": "#392c31"
+         },
+
+         "misc":
+         {
+             "border_width": "2",
+             "padding": "5,5"
+         }
+     },
+  "text_box":
+     {
+         "colours":
+         {
+             "dark_bg":"#5a555a",
+             "normal_border": "#392c31",
+             "link_text": "#FF0000",
+             "link_hover": "#FFFF00",
+             "link_selected": "#FFFFFF"
+         },
+       "font":
+         {
+             "name": "Retro Gaming.ttf",
+             "size": "12",
+             "bold": "0",
+             "italic": "0"
+         },
+         "misc":
+         {
+             "border_width": "2",
+             "padding": "10,10",
+             "link_normal_underline": "0",
+             "link_hover_underline": "1",
+             "line_spacing": "1.0",
+           "text_horiz_alignment": "center"
+         }
+     },
+     "text_box.vertical_scroll_bar":
+     {
+         "colours":
+         {
+            "dark_bg": "#505068"
+         }
+     },
+     "text_box.vertical_scroll_bar.#sliding_button":
+     {
+         "misc":
+         {
+            "border_width": "2"
+         }
+     },
+  "#text_box_message":
+     {
+         "colours":
+         {
+             "dark_bg":"#5a555a",
+             "normal_border": "#392c31",
+             "link_text": "#FF0000",
+             "link_hover": "#FFFF00",
+             "link_selected": "#FFFFFF"
+         },
+       "font":
+         {
+             "name": "Retro Gaming.ttf",
+             "size": "12",
+             "bold": "0",
+             "italic": "0"
+         },
+         "misc":
+         {
+             "border_width": "2",
+             "padding": "10,10",
+             "link_normal_underline": "0",
+             "link_hover_underline": "1",
+             "line_spacing": "1.0",
+           "text_horiz_alignment": "center"
+         }
+     },
+     "text_box.vertical_scroll_bar":
+     {
+         "colours":
+         {
+            "dark_bg": "#505068"
+         }
+     },
+     "text_box.vertical_scroll_bar.#sliding_button":
+     {
+         "misc":
+         {
+            "border_width": "2"
+         }
+     }
+}
