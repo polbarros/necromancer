@@ -163,9 +163,9 @@ class Combat(State):
                                                             object_id='#button_r_roll')
 
         # Caja de texto para comunicarse con el usuario
-        self.text_box = pygame_gui.elements.UITextBox(html_text="FIGHT",
+        self.text_box = pygame_gui.elements.UITextBox(html_text="<b>FIGHT</b>",
                                                       relative_rect=pygame.Rect((100,
-                                                                                 300),
+                                                                                 210),
                                                                                 (300, 150)),
                                                       manager=self.manager_combat,
                                                       wrap_to_height=True,
@@ -173,12 +173,14 @@ class Combat(State):
         self.text_box.hide()  # Escondemos la caja de texto para mensajes.
 
         # Elementos operativos para el combate
-        self.roll = None
-        self.judgment = None
-        self.list_dices = None
-        self.ends_player = False
-        self.ends_enemy = True
-        self.space_key = True
+        self.roll = None # Resultado de la tirada de dados para hacer ataques básicos.
+        self.judgment = None # Veredicto tras contraponer la tirada (roll) del attacker con al postura del target.
+        self.list_dices = None # Lista de tiradas de dados de la función roll_damage
+        self.amount = 0 # Cantidad de puntos de vida para quitar.
+        self.ends_player = False # Confirmación de finalización del turno del guerrero seleccionado (jugador)
+        self.ends_enemy = True # Confirmación de finalización del turno del último enemigo
+        self.space_key = False # Estado del uso de la barra espaciadora
+        self.i_message = "" # Mensaje que deberá mostrarse en la text_box.
 
     def calculate_health_percent(self):
         # Función para calcular el porcentaje de salud del guerrero seleccionado (para la barra de salud).
@@ -195,8 +197,7 @@ class Combat(State):
 
         # Actualiza los efectos animados y otros elementos de la caja de texto de mensajes para el jugador
         self.text_box.update(delta_time)
-
-        #self.text_box.update_text_effect(delta_time)
+        self.text_box.update_text_effect(delta_time)
 
         # Condiciones para la presentación de botones de ataque simple
         if self.warrior.attack_roll == 20:
@@ -211,16 +212,30 @@ class Combat(State):
 
         if self.warrior.hp_current > 0 and self.last_enemy.hp_current > 0:
             # Mientras los puntos de guerrero seleccionado y el último enemigo sean superiores a 0.
-            if self.ends_enemy == True and self.text_box.hide():
+            if self.ends_enemy == True and self.ends_player == False and self.space_key == False:
+                self.enable_buttons()  # Habilitamos los botones para el jugador.
+                self.i_message = ''
+                self.text_box.hide()  # Escondemos la caja de texto
                 self.player_turn() # Llamamos a la función que inicia el turno del jugador.
 
-            elif self.ends_player == True and self.text_box.hide():
+                self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
+                self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_EXPAND_CONTRACT, effect_tag='judgement',
+                                                params={'loop': True, 'max_scale': 1.5,
+                                                        'time_to_complete_expand_contract': 2})
+                if self.space_key:
+                    self.i_message = ''
+                    self.text_box.hide()  # Escondemos la caja de texto
+
+            elif self.ends_player == True and self.ends_enemy == False and self.space_key == True:
+                self.i_message = ''
+                self.text_box.hide()  # Escondemos la caja de texto
                 self.enemy_turn() # Llamamos a la función que inicia el turno del enemigo.
 
-            elif self.text_box.show():
-                '''aqui cal cridar a una funcio dedicada a missatges i a cridar hide() en cas de tocar tecla
-                self.space_key == True'''
-                pass
+                self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
+                self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_EXPAND_CONTRACT, effect_tag='judgement',
+                                                params={'loop': True, 'max_scale': 1.5,
+                                                        'time_to_complete_expand_contract': 2})
+
 
         elif self.warrior.hp_current <= 0:
             pass
@@ -234,8 +249,8 @@ class Combat(State):
             self.roll_damage(self.warrior)
             self.get_damage(self.warrior, self.last_enemy, self.judgment, self.list_dices)
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
         elif self.warrior.attack_roll == 12 and self.button_attack_1d12.check_pressed():
             self.roll_attack(12)
@@ -243,44 +258,44 @@ class Combat(State):
             self.roll_damage(self.warrior)
             self.get_damage(self.warrior, self.last_enemy, self.judgment, self.list_dices)
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
         elif self.button_strategic.check_pressed():
             self.str_attack(self.warrior)
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
         elif self.button_powerful.check_pressed():
             self.pwr_attack(self.warrior)
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
         elif self.warrior.heal >= 1 and self.button_heal.check_pressed():
             self.warrior.hp_current = self.warrior.hp_max  # Curamos la salud del guerrero seleccionado al completo.
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
         elif self.warrior.bomb >= 1 and self.button_bomb.check_pressed():
             self.last_enemy.hp_current -= random.randint(30, 50)  # El enemigo pierde mucha vida.
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
         elif self.warrior.stance_recovery >= 1 and self.button_r_stance.check_pressed():
             self.warrior.stance_weak = False
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
         elif self.warrior.roll_recovery >= 1 and self.button_r_roll.check_pressed():
             self.warrior.attack_roll = 20
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
-            # Cambiamos status de atributos sobre la finalización de turnos
             self.ends_player, self.ends_enemy = True, False
+            self.message(self.i_message)
 
     def disable_buttons(self):
         # Deshabilitamos los botones para el jugador
@@ -308,10 +323,11 @@ class Combat(State):
             self.roll_damage(self.last_enemy)
             self.get_damage(self.last_enemy, self.warrior, self.judgment, self.list_dices)
 
-        self.enable_buttons()  # Habilitamos los botones para el jugador.
 
-        # Cambiamos status de atributos sobre la finalización de turnos
+
         self.ends_player, self.ends_enemy = False, True
+
+        self.message(self.i_message)
 
     def enable_buttons(self):
         # Habilitamos los botones para el jugador
@@ -327,13 +343,12 @@ class Combat(State):
     def process_gui_events(self, event):
         self.manager_combat.process_events(event)  # Revisión de eventos propios de los elementos de pygame_gui.
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE and self.space_key == False:
                 print("Space key pressed")
                 self.space_key = True
                 print(self.space_key)
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_SPACE:
-                print("Space key released")
+            elif event.key == pygame.K_SPACE and self.space_key == True:
+                print("Space key pressed")
                 self.space_key = False
                 print(self.space_key)
 
@@ -450,23 +465,13 @@ class Combat(State):
             elif attacker.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Critical Miss! {} failed attack and lost {} HP'.format(attacker.name, amount))
-            self.text_box.html_text = '<effect id=judgement><b>Critical Miss!</b></effect><br>{} failed attack ' \
+            self.i_message = '<effect id=judgement><b>Critical Miss!</b></effect><br>{} failed attack ' \
                                       'and lost {} HP<br><br>[SPACE] to continue'.format(attacker.name, amount)
-            self.text_box.show()
-            print(self.text_box.html_text)
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_EXPAND_CONTRACT, effect_tag='judgement')
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
-            #self.text_box.stop_finished_effect()
 
         elif judgment == "Miss":
             print('Miss! {} failed attack'.format(attacker.name))
-            self.text_box.html_text = '<effect id=judgement><b>Miss!</b></effect><br>{} failed attack <br><br>' \
+            self.i_message = '<effect id=judgement><b>Miss!</b></effect><br>{} failed attack <br><br>' \
                                       '[SPACE] to continue'.format(attacker.name)
-            self.text_box.show()
-            print(self.text_box.html_text)
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_EXPAND_CONTRACT, effect_tag='judgement')
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
-            #self.text_box.stop_finished_effect()
 
         elif judgment == "Parry":
             for i in dices:
@@ -479,13 +484,8 @@ class Combat(State):
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Parry! {} lost only {} HP'.format(target.name, amount))
-            self.text_box.html_text = '<effect id=judgement><b>Parry!</b></effect><br>{} lost only {} HP<br><br>' \
+            self.i_message = '<effect id=judgement><b>Parry!</b></effect><br>{} lost only {} HP<br><br>' \
                                       '[SPACE] to continue'.format(target.name, amount)
-            self.text_box.show()
-            print(self.text_box.html_text)
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_EXPAND_CONTRACT, effect_tag='judgement')
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
-            #self.text_box.stop_finished_effect()
 
         elif judgment == "Hit":
             for i in dices:
@@ -498,13 +498,8 @@ class Combat(State):
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Hit! {} lost {} HP'.format(target.name, amount))
-            self.text_box.html_text = '<effect id=judgement><b>Hit!</b></effect><br>{} lost {} HP<br><br>[SPACE] ' \
+            self.i_message = '<effect id=judgement><b>Hit!</b></effect><br>{} lost {} HP<br><br>[SPACE] ' \
                                       'to continue'.format(target.name, amount)
-            self.text_box.show()
-            print(self.text_box.html_text)
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_EXPAND_CONTRACT, effect_tag='judgement')
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
-            #self.text_box.stop_finished_effect()
 
         elif judgment == "Critical Hit":
             for i in dices:
@@ -517,13 +512,8 @@ class Combat(State):
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Hit! {} lost {} HP'.format(target.name, amount))
-            self.text_box.html_text = '<effect id=judgement><b>Critical Hit!</b></effect><br>{} lost {} HP<br><br>' \
+            self.i_message = '<effect id=judgement><b>Critical Hit!</b></effect><br>{} lost {} HP<br><br>' \
                                       '[SPACE]to continue'.format(target.name, amount)
-            self.text_box.show()
-            print(self.text_box.html_text)
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_EXPAND_CONTRACT, effect_tag='judgement')
-            #self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
-            #self.text_box.stop_finished_effect()
 
     def str_attack(self, attacker):
         """Función para ejecutar el ataque estratégico que conlleva distintos efectos en el atacante y en el objetivo,
@@ -711,6 +701,10 @@ class Combat(State):
                 amount += number
             self.warrior.hp_current -= amount
             print("{} used Shell Hits".format(attacker.name))
+
+    def message(self, message):
+        self.text_box.set_text(message)
+        self.text_box.show()
 
     def render(self, display):
         # Color de fondo
