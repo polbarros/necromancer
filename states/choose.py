@@ -172,7 +172,7 @@ class Choose(State):
         self.ashigaru_button.draw(display)
         self.inugami_button.draw(display)
         # Texto: rasgos de los guerreros (se muestran al pasar el cursor por encima)
-        if self.samurai_button.hovered == True:
+        if self.samurai_button.hovered:
             self.game.draw_text(display, "SAMURAI", (57, 44, 49), self.game.W // 2, self.game.H - 150)
             self.game.draw_text_left(display, "Armament:", (57, 44, 49), self.game.W // 2 - 130, self.game.H - 120)
             self.game.draw_text_left(display, "Uchigatana and wakisashi", (98, 105, 106), self.game.W // 2 - 47, self.game.H - 120)
@@ -184,7 +184,7 @@ class Choose(State):
             display.blit(self.samurai_stance_img, (self.game.W // 2 - 60, self.game.H - 72))
             self.game.draw_text_left(display, "Armor:", (57, 44, 49), self.game.W // 2 - 130, self.game.H - 60)
             self.game.draw_text_left(display, "3", (98, 105, 106), self.game.W // 2 - 73, self.game.H - 60)
-        if self.kunoichi_button.hovered == True:
+        if self.kunoichi_button.hovered:
             self.game.draw_text(display, "KUNOICHI", (57, 44, 49), self.game.W // 2, self.game.H - 150)
             self.game.draw_text_left(display, "Armament: ", (57, 44, 49), self.game.W // 2 - 130, self.game.H - 120)
             self.game.draw_text_left(display, "Kusarigama and kunai", (98, 105, 106), self.game.W // 2 - 47, self.game.H - 120)
@@ -196,7 +196,7 @@ class Choose(State):
             display.blit(self.kunoichi_stance_img, (self.game.W // 2 - 60, self.game.H - 72))
             self.game.draw_text_left(display, "Armor:", (57, 44, 49), self.game.W // 2 - 130, self.game.H - 60)
             self.game.draw_text_left(display, "1", (98, 105, 106), self.game.W // 2 - 73, self.game.H - 60)
-        if self.ashigaru_button.hovered == True:
+        if self.ashigaru_button.hovered:
             self.game.draw_text(display, "ASHIGARU", (57, 44, 49), self.game.W // 2, self.game.H - 150)
             self.game.draw_text_left(display, "Armament:", (57, 44, 49), self.game.W // 2 - 130, self.game.H - 120)
             self.game.draw_text_left(display, "Yari and arquebus", (98, 105, 106), self.game.W // 2 - 47, self.game.H - 120)
@@ -208,7 +208,7 @@ class Choose(State):
             display.blit(self.ashigaru_stance_img, (self.game.W // 2 - 60, self.game.H - 72))
             self.game.draw_text_left(display, "Armor:", (57, 44, 49), self.game.W // 2 - 130, self.game.H - 60)
             self.game.draw_text_left(display, "2", (98, 105, 106), self.game.W // 2 - 73, self.game.H - 60)
-        if self.inugami_button.hovered == True:
+        if self.inugami_button.hovered:
             self.game.draw_text(display, "INUGAMI", (57, 44, 49), self.game.W // 2, self.game.H - 150)
             self.game.draw_text_left(display, "Armament:", (57, 44, 49), self.game.W // 2 - 130, self.game.H - 120)
             self.game.draw_text_left(display, "Kojyutsu sorcery", (98, 105, 106), self.game.W // 2 - 47, self.game.H - 120)

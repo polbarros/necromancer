@@ -2,6 +2,7 @@ import db
 import models
 from sqlalchemy import desc
 from states.state import State
+from states.reward import Reward
 import pygame_gui
 import os
 import pygame
@@ -207,6 +208,24 @@ class Combat(State):
             self.button_attack_1d20.hide()
             self.button_attack_1d12.show()
 
+        # Condiciones para la presentación de botón de ataque estratégico
+        if not self.warrior.strategy_attack:
+            self.button_strategic.disable()
+
+        # Condiciones para la presentación de botón de ataque poderoso
+        if not self.warrior.power_strike:
+            self.button_powerful.disable()
+
+        # Condiciones para la presentación de botones de consumibles
+        if self.warrior.heal == 0:
+            self.button_heal.disable()
+        if self.warrior.bomb == 0:
+            self.button_bomb.disable()
+        if self.warrior.stance_recovery == 0:
+            self.button_r_stance.disable()
+        if self.warrior.roll_recovery == 0:
+            self.button_r_roll.disable()
+
         # Actualiza la barra de salud del guerrero seleccionado
         self.warrior_health_bar.update(delta_time)
 
@@ -234,7 +253,9 @@ class Combat(State):
         elif self.warrior.hp_current <= 0:
             pass
         elif self.last_enemy.hp_current <= 0:
-            pass
+            db.session.commit()
+            new_state = Reward(self.game)  # Creamos un objeto de la clase estado de recompensa.
+            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
 
     def player_turn(self):
         if self.warrior.attack_roll == 20 and self.button_attack_1d20.check_pressed():
@@ -255,14 +276,16 @@ class Combat(State):
             self.ends_player, self.ends_enemy = True, False
             self.message(self.i_message)
 
-        elif self.button_strategic.check_pressed():
+        elif self.button_strategic.check_pressed() and self.warrior.strategy_attack:
             self.str_attack(self.warrior)
+            self.warrior.strategy_attack = False # El guerrero pierde la capacidad de ataque estratégico
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.ends_player, self.ends_enemy = True, False
             self.message(self.i_message)
 
-        elif self.button_powerful.check_pressed():
+        elif self.button_powerful.check_pressed() and self.warrior.power_strike:
             self.pwr_attack(self.warrior)
+            self.warrior.power_strike = False  # El guerrero pierde la capacidad de ataque poderoso
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.ends_player, self.ends_enemy = True, False
             self.message(self.i_message)
@@ -283,7 +306,7 @@ class Combat(State):
             self.i_message = '{} trowed a bomb.<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
-        elif self.warrior.stance_recovery >= 1 and self.button_r_stance.check_pressed():
+        elif self.warrior.stance_recovery >= 1 and self.warrior.stance_weak and self.button_r_stance.check_pressed():
             self.warrior.stance_weak = False
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.stance_recovery -= 1
@@ -291,7 +314,7 @@ class Combat(State):
             self.i_message = '{} recovered the stance.<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
-        elif self.warrior.roll_recovery >= 1 and self.button_r_roll.check_pressed():
+        elif self.warrior.roll_recovery >= 1 and self.warrior.attack_roll != 20 and self.button_r_roll.check_pressed():
             self.warrior.attack_roll = 20
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.roll_recovery -= 1
@@ -524,7 +547,7 @@ class Combat(State):
         if attacker.name == "Samurai":
             amount = 0
             for i in range(1):
-                number = random.randint(1, 8) - self.last_enemy.armor
+                number = random.randint(1, 8) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -539,7 +562,7 @@ class Combat(State):
         elif attacker.name == "Kunoichi":
             amount = 0
             for i in range(1):
-                number = random.randint(1, 4) - self.last_enemy.armor
+                number = random.randint(1, 4) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -552,7 +575,7 @@ class Combat(State):
         elif attacker.name == "Ashigaru":
             amount = 0
             for i in range(2):
-                number = random.randint(1, 10) - self.last_enemy.armor
+                number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -565,7 +588,7 @@ class Combat(State):
         elif attacker.name == "Inugami":
             amount = 0
             for i in range(1):
-                number = random.randint(1, 10) - self.last_enemy.armor
+                number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -578,7 +601,7 @@ class Combat(State):
         elif attacker.name == "Guardian Miko":
             amount = 0
             for i in range(1):
-                number = random.randint(1, 8) - self.warrior.armor
+                number = random.randint(1, 8) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -593,7 +616,7 @@ class Combat(State):
         elif attacker.name == "Swordsman of Ministry":
             amount = 0
             for i in range(5):
-                number = random.randint(1, 4) - self.warrior.armor
+                number = random.randint(1, 4) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -605,7 +628,7 @@ class Combat(State):
         elif attacker.name == "Lone Shinobi":
             amount = 0
             for i in range(5):
-                number = random.randint(1, 2) - self.warrior.armor
+                number = random.randint(1, 2) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -617,7 +640,7 @@ class Combat(State):
         elif attacker.name == "Gang of Kappas":
             amount_necrotic = 0
             for i in range(3):
-                number = random.randint(1, 4) - self.warrior.res_necrotic
+                number = random.randint(1, 4) + attacker.dmg_necrotic - self.warrior.res_necrotic
                 if number < 0:
                     number = 0
                 amount_necrotic += number
@@ -632,7 +655,7 @@ class Combat(State):
         if attacker.name == "Samurai":
             amount = 0
             for i in range(3):
-                number = random.randint(1, 10) - self.last_enemy.armor
+                number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -643,7 +666,7 @@ class Combat(State):
         elif attacker.name == "Kunoichi":
             amount = 0
             for i in range(10):
-                number = random.randint(1, 4) - self.last_enemy.armor
+                number = random.randint(1, 4) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -654,7 +677,7 @@ class Combat(State):
         elif attacker.name == "Ashigaru":
             amount = 0
             for i in range(5):
-                number = random.randint(1, 10) - self.last_enemy.armor
+                number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -666,12 +689,12 @@ class Combat(State):
         elif attacker.name == "Inugami":
             amount = 0
             for i in range(4):
-                number = random.randint(1, 8) - self.last_enemy.armor
+                number = random.randint(1, 8) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
                 amount += number
             self.last_enemy.hp_current -= amount
-            amount_necrotic = random.randint(1, 6) - self.last_enemy.res_necrotic
+            amount_necrotic = random.randint(1, 6) + attacker.dmg_necrotic - self.last_enemy.res_necrotic
             self.last_enemy.hp_current -= amount_necrotic
             print("{} used Putrid Bite".format(attacker.name))
             self.i_message = '{} used Putrid Bite'.format(attacker.name)
@@ -679,13 +702,13 @@ class Combat(State):
         elif attacker.name == "Guardian Miko":
             amount = 0
             for i in range(2):
-                number = random.randint(1, 10) - self.warrior.armor
+                number = random.randint(1, 10) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
                 amount += number
             self.warrior.hp_current -= amount
             self.last_enemy.armor += 3
-            amount_radiant = random.randint(1, 4) - self.warrior.res_radiant
+            amount_radiant = random.randint(1, 4) + attacker.dmg_radiant - self.warrior.res_radiant
             self.last_enemy.hp_current -= amount_radiant
             print("{} used Radiant Double Arrow".format(attacker.name))
             self.i_message = '{} used Radiant Double Arrow'.format(attacker.name)
@@ -693,7 +716,7 @@ class Combat(State):
         elif attacker.name == "Swordsman of Ministry":
             amount = 0
             for i in range(2):
-                number = random.randint(1, 10) - self.warrior.armor
+                number = random.randint(1, 10) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -705,7 +728,7 @@ class Combat(State):
         elif attacker.name == "Lone Shinobi":
             amount = 0
             for i in range(3):
-                number = random.randint(1, 6) - self.warrior.armor
+                number = random.randint(1, 6) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
                 amount += number
@@ -717,7 +740,7 @@ class Combat(State):
         elif attacker.name == "Gang of Kappas":
             amount = 0
             for i in range(3):
-                number = random.randint(1, 8) - self.warrior.armor
+                number = random.randint(1, 8) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
                 amount += number
