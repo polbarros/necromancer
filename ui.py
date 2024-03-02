@@ -36,7 +36,7 @@ class Button():
 
     def draw(self, surface):
         # Dibuja el botón en la pantalla
-        if self.hovered == True:
+        if self.hovered:
             surface.blit(self.image_h, (self.rect.x, self.rect.y))  # Posiciona la imagen.
         else:
             surface.blit(self.image, (self.rect.x, self.rect.y)) # Posiciona la imagen.

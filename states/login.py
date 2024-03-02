@@ -44,6 +44,16 @@ class Login(State):
                                                           manager=self.game.manager,
                                                           object_id='#button_new_necromancer')
 
+        # Establecemos que todos los jugadores registrados no están seleccionados
+        self.players = db.session.query(models.Login).all()
+        for player in self.players:
+            player.selection = False
+        db.session.commit()
+
+        #Datos del jugador que inicia la partida
+        self.necromancer = None
+
+
 
     def update(self, delta_time):
 
@@ -59,8 +69,9 @@ class Login(State):
 
         # Comprobamos la existencia de los datos tras pulsar "SUMMON" y en caso positivo entramos al juego.
         if (len(text_name) != 0 or len(text_spell) >= 8) and self.button_summon.check_pressed():
-            necromancer = db.session.query(models.Login).filter_by(name=text_name, password=text_spell)
-            if necromancer:
+            self.necromancer = db.session.query(models.Login).filter_by(name=text_name, password=text_spell).first()
+            if self.necromancer:
+                self.necromancer.selection = True # Indicamos que el jugador está escogido
                 new_state = Choose(self.game)
                 new_state.enter_state()
             else:
@@ -69,9 +80,9 @@ class Login(State):
         # Comprobamos la existencia de los datos tras pulsar "New necromancer" y en caso negativo los registramos.
         if (len(text_name) != 0 or len(text_spell) >= 8) and self.button_new_necromancer.check_pressed():
             # Creamos un nuevo objeto de la clase Login que incluiremos en la base de datos.
-            new_necromancer = models.Login(name=text_name, password=text_spell)
+            new_necromancer = models.Login(name=text_name, password=text_spell, max_score=0, selection=False)
             db.session.add(new_necromancer)
-            self.message = "Necromancer registered"
+            self.message = "Necromancer registered successfully"
             db.session.commit()
         else:
             pass

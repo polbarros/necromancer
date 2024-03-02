@@ -55,7 +55,9 @@ class Choose(State):
                                          self.inugami_button_img, self.inugami_button_img_h, 1)
         self.inugami_stance_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_4.png"))
 
+
     def update(self, delta_time):
+
         if self.samurai_button.action():
             new_samurai = models.Warrior(name= "Samurai",
                                          level=1,
@@ -78,6 +80,8 @@ class Choose(State):
                                          attack_roll=20,
                                          roll_recovery=1,
                                          type="player")
+            self.first_time_here = False
+            db.session.query(models.Warrior).delete()
             db.session.add(new_samurai)
             db.session.commit()
             new_state = Combat(self.game) # Creamos un objeto de la clase estado de combate.
@@ -91,7 +95,7 @@ class Choose(State):
                                           dmg_base=0,
                                           dmg_necrotic=0,
                                           dmg_radiant=0,
-                                          bomb=0,
+                                          bomb=1,
                                           heal=1,
                                           strategy_attack=True,
                                           power_strike=True,
@@ -104,6 +108,8 @@ class Choose(State):
                                           attack_roll=20,
                                           roll_recovery=1,
                                           type="player")
+            self.first_time_here = False
+            db.session.query(models.Warrior).delete()
             db.session.add(new_kunoichi)
             db.session.commit()
             new_state = Combat(self.game) # Creamos un objeto de la clase estado de combate.
@@ -117,7 +123,7 @@ class Choose(State):
                                           dmg_base=0,
                                           dmg_necrotic=0,
                                           dmg_radiant=0,
-                                          bomb=0,
+                                          bomb=1,
                                           heal=1,
                                           strategy_attack=True,
                                           power_strike=True,
@@ -130,6 +136,8 @@ class Choose(State):
                                           attack_roll=20,
                                           roll_recovery=1,
                                           type="player")
+            self.first_time_here = False
+            db.session.query(models.Warrior).delete()
             db.session.add(new_ashigaru)
             db.session.commit()
             new_state = Combat(self.game) # Creamos un objeto de la clase estado de combate.
@@ -143,7 +151,7 @@ class Choose(State):
                                          dmg_base=0,
                                          dmg_necrotic=0,
                                          dmg_radiant=0,
-                                         bomb=0,
+                                         bomb=1,
                                          heal=1,
                                          strategy_attack=True,
                                          power_strike=True,
@@ -156,6 +164,8 @@ class Choose(State):
                                          attack_roll=20,
                                          roll_recovery=1,
                                          type="player")
+            self.first_time_here = False
+            db.session.query(models.Warrior).delete()
             db.session.add(new_inugami)
             db.session.commit()
             new_state = Combat(self.game) # Creamos un objeto de la clase estado de combate.

@@ -3,6 +3,7 @@ import models
 from sqlalchemy import desc
 from states.state import State
 from states.reward import Reward
+from states.over import Over
 import pygame_gui
 import os
 import pygame
@@ -173,6 +174,16 @@ class Combat(State):
                                                       object_id='#text_box_message')
         self.text_box.hide()  # Escondemos la caja de texto para mensajes.
 
+        # Botón de "sacrificio" para salir de la partida
+        self.button_sacrifice = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((self.game.W - 180,
+                                                                                          self.game.H -50),
+                                                                                         (167, 40)),
+                                                               text="Sacrifice",
+                                                               manager=self.manager_combat,
+                                                               tool_tip_text="Stop this duel",
+                                                               object_id="#button_attack_1d12")
+
+
         # Elementos operativos para el combate
         self.roll = None # Resultado de la tirada de dados para hacer ataques básicos.
         self.judgment = None # Veredicto tras contraponer la tirada (roll) del attacker con al postura del target.
@@ -250,10 +261,14 @@ class Combat(State):
 
                 self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
 
-        elif self.warrior.hp_current <= 0:
-            pass
+        elif self.warrior.hp_current <= 0 or self.button_sacrifice.check_pressed():
+            db.session.commit()
+            new_state = Over(self.game)  # Creamos un objeto de la clase estado de recompensa.
+            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
+
         elif self.last_enemy.hp_current <= 0:
             db.session.commit()
+            self.enemy_generator() # Creamos el próximo enemigo
             new_state = Reward(self.game)  # Creamos un objeto de la clase estado de recompensa.
             new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
 
@@ -355,15 +370,23 @@ class Combat(State):
         self.message(self.i_message)
 
     def enable_buttons(self):
-        # Habilitamos los botones para el jugador
-        self.button_attack_1d20.enable()
-        self.button_attack_1d12.enable()
-        self.button_strategic.enable()
-        self.button_powerful.enable()
-        self.button_heal.enable()
-        self.button_bomb.enable()
-        self.button_r_stance.enable()
-        self.button_r_roll.enable()
+        # Habilitamos los botones para el jugador si se cumplen las condiciones
+        if self.warrior.attack_roll == 20:
+            self.button_attack_1d20.enable()
+        if self.warrior.attack_roll == 12:
+            self.button_attack_1d12.enable()
+        if self.warrior.strategy_attack:
+            self.button_strategic.enable()
+        if self.warrior.power_strike:
+            self.button_powerful.enable()
+        if self.warrior.heal >= 1:
+            self.button_heal.enable()
+        if self.warrior.bomb >= 1:
+            self.button_bomb.enable()
+        if self.warrior.stance_recovery >= 1:
+            self.button_r_stance.enable()
+        if self.warrior.roll_recovery >= 1:
+            self.button_r_roll.enable()
 
     def process_gui_events(self, event):
         self.manager_combat.process_events(event)  # Revisión de eventos propios de los elementos de pygame_gui.
@@ -623,7 +646,8 @@ class Combat(State):
             self.warrior.hp_current -= amount
             self.warrior.stance_weak = True
             print("{} used Stunner Cut and weakened warrior's stance".format(attacker.name))
-            self.i_message = '{} used Stunner Cut and weakened warrior\'s stance'.format(attacker.name)
+            self.i_message = '{} used Stunner Cut and weakened warrior\'s stance<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Lone Shinobi":
             amount = 0
@@ -635,7 +659,8 @@ class Combat(State):
             self.warrior.hp_current -= amount
             self.warrior.attack_roll = 12
             print("{} used Caltrops and weakened warrior's roll attack".format(attacker.name))
-            self.i_message = '{} used Caltrops and weakened warrior\'s roll attack'.format(attacker.name)
+            self.i_message = '{} used Caltrops and weakened warrior\'s roll attack<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Gang of Kappas":
             amount_necrotic = 0
@@ -646,7 +671,8 @@ class Combat(State):
                 amount_necrotic += number
             self.warrior.hp_current -= amount_necrotic
             print("{} used Terrible Jaws".format(attacker.name))
-            self.i_message = '{} used Terrible Jaws'.format(attacker.name)
+            self.i_message = '{} used Terrible Jaws<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
     def pwr_attack(self, attacker):
         """Función para ejecutar el ataque poderoso que conlleva distintos efectos en el atacante y en el objetivo,
@@ -661,7 +687,8 @@ class Combat(State):
                 amount += number
             self.last_enemy.hp_current -= amount
             print("{} used Triple Death".format(attacker.name))
-            self.i_message = '{} used Triple Death'.format(attacker.name)
+            self.i_message = '{} used Triple Death<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Kunoichi":
             amount = 0
@@ -672,7 +699,8 @@ class Combat(State):
                 amount += number
             self.last_enemy.hp_current -= amount
             print("{} used Wasp Rain".format(attacker.name))
-            self.i_message = '{} used Wasp Rain'.format(attacker.name)
+            self.i_message = '{} used Wasp Rain<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Ashigaru":
             amount = 0
@@ -684,7 +712,8 @@ class Combat(State):
             self.last_enemy.hp_current -= amount
             self.warrior.hp_current -= random.randint(1, 6) - self.warrior.armor  # Daño colateral sobre Ashigaru
             print("{} used Force and Fire".format(attacker.name))
-            self.i_message = '{} used Force and Fire'.format(attacker.name)
+            self.i_message = '{} used Force and Fire<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Inugami":
             amount = 0
@@ -697,7 +726,8 @@ class Combat(State):
             amount_necrotic = random.randint(1, 6) + attacker.dmg_necrotic - self.last_enemy.res_necrotic
             self.last_enemy.hp_current -= amount_necrotic
             print("{} used Putrid Bite".format(attacker.name))
-            self.i_message = '{} used Putrid Bite'.format(attacker.name)
+            self.i_message = '{} used Putrid Bite<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Guardian Miko":
             amount = 0
@@ -711,7 +741,8 @@ class Combat(State):
             amount_radiant = random.randint(1, 4) + attacker.dmg_radiant - self.warrior.res_radiant
             self.last_enemy.hp_current -= amount_radiant
             print("{} used Radiant Double Arrow".format(attacker.name))
-            self.i_message = '{} used Radiant Double Arrow'.format(attacker.name)
+            self.i_message = '{} used Radiant Double Arrow<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Swordsman of Ministry":
             amount = 0
@@ -723,7 +754,8 @@ class Combat(State):
             self.warrior.hp_current -= amount
             self.warrior.stance_weak = True
             print("{} used Crossed Strikes".format(attacker.name))
-            self.i_message = '{} used Crossed Strikes'.format(attacker.name)
+            self.i_message = '{} used Crossed Strikes<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Lone Shinobi":
             amount = 0
@@ -735,7 +767,8 @@ class Combat(State):
             self.warrior.hp_current -= amount
             self.warrior.stance_weak = True
             print("{} used Weakener Stab".format(attacker.name))
-            self.i_message = '{} used Weakener Stab'.format(attacker.name)
+            self.i_message = '{} used Weakener Stab<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Gang of Kappas":
             amount = 0
@@ -746,7 +779,8 @@ class Combat(State):
                 amount += number
             self.warrior.hp_current -= amount
             print("{} used Shell Hits".format(attacker.name))
-            self.i_message = '{} used Shell Hits'.format(attacker.name)
+            self.i_message = '{} used Shell Hits<br>' \
+                             '[SPACE] to continue'.format(attacker.name)
 
     def message(self, message):
         self.text_box.set_text(message)
@@ -805,13 +839,19 @@ class Combat(State):
         elif self.last_enemy.name == "Gang of Kappas":
             display.blit(self.kappas_img, (self.game.W - 256, 0))
 
-        # Nombre del guerrero seleccionado y nivel.
+        # Nombre del enemigo y nivel.
         self.game.draw_text_left(display, (str(self.last_enemy.name)), (57, 44, 49), 30, 30)
         self.game.draw_text_left(display, "lvl. " + (str(self.last_enemy.level)), (57, 44, 49), 30, 48)
 
         # Mostramos la vida actual y máxima del último enemigo
         self.game.draw_text_left(display, (str(self.last_enemy.hp_current)) + " / " + (str(self.last_enemy.hp_max)),
                                  (57, 44, 49), 32, 80)
+
+        # Mostramos el tipo de roll attack del enemigo
+        if self.last_enemy.attack_roll == 20:
+            self.game.draw_text_right(display, "1d20", (57, 44, 49), 195, 80)
+        elif self.last_enemy.attack_roll == 12:
+            self.game.draw_text_right(display, "1d12", (152, 31, 48), 195, 80)
 
         # Símbolo que indica el nivel de armadura y texto del valor de este atributo.
         display.blit(self.last_enemy_armor_img, (30, 120))

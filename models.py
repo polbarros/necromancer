@@ -10,11 +10,15 @@ class Login(db.Base): #Hereda de la clase Base del fichero db.py
     id = Column(Integer, primary_key=True) # Identificador único de jugador.
     name = Column(String(100), nullable=False) # Identificador escogido por el usuario.
     password = Column(String(100), nullable=False) # Contraseña escogida por el usuario.
+    max_score = Column(Integer, nullable=False) # Máxima puntuación
+    selection = Column(Boolean, nullable=False) # Estado de selección del jugador.
 
-    def __init__(self, name, password):
+    def __init__(self, name, password, max_score, selection):
         #El id lo crea la BD automáticamente.
         self.name = name
         self.password = password
+        self.max_score = max_score
+        self.selection = selection
         print("Login creado con éxito")
 
     def __repr__(self):
@@ -53,7 +57,7 @@ class Warrior(db.Base): #Hereda de la clase Base del fichero db.py
     def __init__(self, name, level, exp, hp_max, hp_current, dmg_base, dmg_necrotic, dmg_radiant, bomb, heal,
                  strategy_attack, power_strike, res_radiant, res_necrotic, armor, stance, stance_weak, stance_recovery,
                  attack_roll, roll_recovery, type):
-        #El id lo crea la BD automáticamente
+        # El id lo crea la BD automáticamente
         self.name = name
         self.level = level
         self.exp = exp

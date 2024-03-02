@@ -21,6 +21,7 @@ class State():
             self.prev_state = self.game.state_stack[-1]
         self.game.state_stack.append(self) # Añadimos el estado del objeto game a la pila como estado actual (último).
 
-    def exit_state(self):
-        # Función para descartar el último estado de la pila.
-        self.game.state_stack.pop()
+    def exit_state(self, index):
+        # Función para descartar los estados del final de la pila desde el índice indicado.
+        # self.game.state_stack.pop(index)
+        del self.game.state_stack[index:]
