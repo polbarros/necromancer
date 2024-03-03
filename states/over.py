@@ -22,15 +22,15 @@ class Over(State):
         self.seppuku_img.set_colorkey([0, 0, 0]) # Quitar el fondo negro que ocupa el espacio de la transparencia.
         self.seppuku_img_h = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "seppuku_h.png"))
         self.seppuku_img_h.set_colorkey([0, 0, 0])  # Quitar el fondo negro que ocupa el espacio de la transparencia.
-        self.seppuku_button = ui.Button((self.game.W // 2) - 135, self.game.H - 465,
-                                          self.seppuku_img, self.seppuku_img_h, 1)
+        self.seppuku_button = ui.Button((self.game.W // 2) - 45, self.game.H - 425,
+                                          self.seppuku_img, self.seppuku_img_h, .7)
         # Botón de invocación de un nuevo guerrero (nueva run).
         self.retry_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "summon_retry.png"))
         self.retry_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro que ocupa el espacio de la transparencia.
         self.retry_img_h = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "summon_retry_h.png"))
         self.retry_img_h.set_colorkey([0, 0, 0])  # Quitar el fondo negro de la transparencia.
-        self.retry_button = ui.Button((self.game.W // 2) + 20, self.game.H - 465,
-                                          self.retry_img, self.retry_img_h, 1)
+        self.retry_button = ui.Button((self.game.W // 2) - 45, self.game.H - 320,
+                                          self.retry_img, self.retry_img_h, .7)
 
         # Recordamos que jugador está jugando para tomar sus datos de puntuación
         self.necromancer = db.session.query(models.Login).filter_by(selection=True).first()
@@ -41,9 +41,6 @@ class Over(State):
         # Llamamos a la función que registra la máxima puntuación en la base de datos.
 
         self.best_score = self.max_score()
-
-
-
 
         # Textos básicos
         self.count_text = "You have defeated {} enemies".format(self.enemies_counted)
@@ -67,9 +64,11 @@ class Over(State):
         if self.seppuku_button.action():
             db.session.query(models.Warrior).delete()  # Borramos los datos en la BD
             self.necromancer.selection = False # Deseleccionamos al jugador
+            db.session.commit()
             self.exit_state(-3)  # Salimos del estado over y lo borramos "over", "combat" y "choose".
         elif self.retry_button.action():
             db.session.query(models.Warrior).delete()  # Borramos los datos en la BD
+            db.session.commit()
             self.exit_state(-2)  # Salimos del estado over y lo borramos "over" y "combat".
 
     def render(self, display):
@@ -81,10 +80,18 @@ class Over(State):
 
         # Renderizamos textos
         self.game.draw_text(display, self.count_text, (57, 44, 49), self.game.W // 2,
-                            self.game.H - 500)
+                            self.game.H - 465)
         self.game.draw_text(display, self.best_text, (57, 44, 49), self.game.W // 2,
-                            self.game.H - 480)
+                            self.game.H - 445)
 
         # Renderizamos botones de selección de opciones
         self.seppuku_button.draw(display)
         self.retry_button.draw(display)
+
+        # Renderizamos texto explicativo de opciones
+        if self.seppuku_button.hovered:
+            self.game.draw_text(display, "Defeat", (57, 44, 49), self.game.W // 2,
+                                self.game.H - 380)
+        elif self.retry_button.hovered:
+            self.game.draw_text(display, "Retry", (57, 44, 49), self.game.W // 2,
+                                self.game.H - 275)

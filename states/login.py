@@ -72,6 +72,7 @@ class Login(State):
             self.necromancer = db.session.query(models.Login).filter_by(name=text_name, password=text_spell).first()
             if self.necromancer:
                 self.necromancer.selection = True # Indicamos que el jugador está escogido
+                db.session.commit()
                 new_state = Choose(self.game)
                 new_state.enter_state()
             else:

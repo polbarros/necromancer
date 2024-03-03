@@ -79,6 +79,8 @@ class Reward(State):
                 self.lvl_text = "Level Up!"
                 self.warrior.level += 1
 
+        db.session.commit()
+
     def update(self, delta_time):
         if self.offensive_button.action():
             if self.offensive_offer == 1:

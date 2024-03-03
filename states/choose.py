@@ -80,13 +80,13 @@ class Choose(State):
                                          attack_roll=20,
                                          roll_recovery=1,
                                          type="player")
-            self.first_time_here = False
+
             db.session.query(models.Warrior).delete()
             db.session.add(new_samurai)
             db.session.commit()
             new_state = Combat(self.game) # Creamos un objeto de la clase estado de combate.
             new_state.enter_state() # El nuevo estado se añade a la pila de estados.
-        if self.kunoichi_button.action():
+        elif self.kunoichi_button.action():
             new_kunoichi = models.Warrior(name="Kunoichi",
                                           level=1,
                                           exp=0,
@@ -108,13 +108,13 @@ class Choose(State):
                                           attack_roll=20,
                                           roll_recovery=1,
                                           type="player")
-            self.first_time_here = False
+
             db.session.query(models.Warrior).delete()
             db.session.add(new_kunoichi)
             db.session.commit()
             new_state = Combat(self.game) # Creamos un objeto de la clase estado de combate.
             new_state.enter_state() # El nuevo estado se añade a la pila de estados.
-        if self.ashigaru_button.action():
+        elif self.ashigaru_button.action():
             new_ashigaru = models.Warrior(name="Ashigaru",
                                           level=1,
                                           exp=0,
@@ -136,13 +136,13 @@ class Choose(State):
                                           attack_roll=20,
                                           roll_recovery=1,
                                           type="player")
-            self.first_time_here = False
+
             db.session.query(models.Warrior).delete()
             db.session.add(new_ashigaru)
             db.session.commit()
             new_state = Combat(self.game) # Creamos un objeto de la clase estado de combate.
             new_state.enter_state() # El nuevo estado se añade a la pila de estados.
-        if self.inugami_button.action():
+        elif self.inugami_button.action():
             new_inugami = models.Warrior(name="Inugami",
                                          level=1,
                                          exp=0,
@@ -164,7 +164,7 @@ class Choose(State):
                                          attack_roll=20,
                                          roll_recovery=1,
                                          type="player")
-            self.first_time_here = False
+
             db.session.query(models.Warrior).delete()
             db.session.add(new_inugami)
             db.session.commit()

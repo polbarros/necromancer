@@ -175,9 +175,9 @@ class Combat(State):
         self.text_box.hide()  # Escondemos la caja de texto para mensajes.
 
         # Botón de "sacrificio" para salir de la partida
-        self.button_sacrifice = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((self.game.W - 180,
-                                                                                          self.game.H -50),
-                                                                                         (167, 40)),
+        self.button_sacrifice = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((self.game.W - 160,
+                                                                                          self.game.H - 40),
+                                                                                         (147, 30)),
                                                                text="Sacrifice",
                                                                manager=self.manager_combat,
                                                                tool_tip_text="Stop this duel",
@@ -261,16 +261,28 @@ class Combat(State):
 
                 self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
 
-        elif self.warrior.hp_current <= 0 or self.button_sacrifice.check_pressed():
-            db.session.commit()
-            new_state = Over(self.game)  # Creamos un objeto de la clase estado de recompensa.
-            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
+        elif self.warrior.hp_current <= 0:
+            for event in pygame.event.get():
+                if event.type == pygame_gui.UI_TEXT_EFFECT_FINISHED:
+                    if event.ui_element == self.text_box:
+                        if event.effect == pygame_gui.TEXT_EFFECT_TYPING_APPEAR:
+                            db.session.commit()
+                            new_state = Over(self.game)  # Creamos un objeto de la clase estado de recompensa.
+                            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
+
 
         elif self.last_enemy.hp_current <= 0:
-            db.session.commit()
-            self.enemy_generator() # Creamos el próximo enemigo
-            new_state = Reward(self.game)  # Creamos un objeto de la clase estado de recompensa.
-            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
+            for event in pygame.event.get():
+                if event.type == pygame_gui.UI_TEXT_EFFECT_FINISHED:
+                    if event.ui_element == self.text_box:
+                        if event.effect == pygame_gui.TEXT_EFFECT_TYPING_APPEAR:
+                            db.session.commit()
+                            self.enemy_generator()  # Creamos el próximo enemigo
+                            self.last_enemy = db.session.query(models.Warrior).filter_by(type="enemy").order_by(
+                                desc(models.Warrior.id)).first()
+                            new_state = Reward(self.game)  # Creamos un objeto de la clase estado de recompensa.
+                            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
+
 
     def player_turn(self):
         if self.warrior.attack_roll == 20 and self.button_attack_1d20.check_pressed():
@@ -310,7 +322,7 @@ class Combat(State):
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.heal -= 1
             self.ends_player, self.ends_enemy = True, False
-            self.i_message = '{} healed.<br>[SPACE] to continue'.format(self.warrior.name)
+            self.i_message = '{} healed<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
         elif self.warrior.bomb >= 1 and self.button_bomb.check_pressed():
@@ -318,7 +330,7 @@ class Combat(State):
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.bomb -= 1
             self.ends_player, self.ends_enemy = True, False
-            self.i_message = '{} trowed a bomb.<br>[SPACE] to continue'.format(self.warrior.name)
+            self.i_message = '{} trowed a bomb<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
         elif self.warrior.stance_recovery >= 1 and self.warrior.stance_weak and self.button_r_stance.check_pressed():
@@ -326,7 +338,7 @@ class Combat(State):
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.stance_recovery -= 1
             self.ends_player, self.ends_enemy = True, False
-            self.i_message = '{} recovered the stance.<br>[SPACE] to continue'.format(self.warrior.name)
+            self.i_message = '{} recovered the stance<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
         elif self.warrior.roll_recovery >= 1 and self.warrior.attack_roll != 20 and self.button_r_roll.check_pressed():
@@ -334,7 +346,7 @@ class Combat(State):
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.roll_recovery -= 1
             self.ends_player, self.ends_enemy = True, False
-            self.i_message = '{} recovered the roll attack.<br>[SPACE] to continue'.format(self.warrior.name)
+            self.i_message = '{} recovered the roll attack<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
     def disable_buttons(self):
@@ -399,6 +411,7 @@ class Combat(State):
                 print("Space key pressed")
                 self.space_key = False
                 print(self.space_key)
+
 
     #  -- FUNCIONES PROPIAS DEL INICIO Y DESARROLLO DEL COMBATE --
     def enemy_generator(self):
