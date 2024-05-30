@@ -19,6 +19,10 @@ class Combat(State):
         # Debemos crear un nuevo manager porque de lo contrario cargaría los elementos de otros archivos de estado.
         self.manager_combat = pygame_gui.UIManager((self.game.W, self.game.H), "theme.json")
 
+        # ESCENARIO DE COMBATE
+        self.scenario = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "combat_bg_cover.png"))
+        self.scenario.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
+
         # -- GUERRERO ESCOGIDO --
         # Toma de la información de la BD sobre el guerrero escogido
         self.warrior = db.session.query(models.Warrior).filter_by(type="player").first()
@@ -802,6 +806,9 @@ class Combat(State):
     def render(self, display):
         # Color de fondo
         display.fill((197, 178, 189))
+
+        # ESCENARIO
+        display.blit(self.scenario, (0, 0))
 
         # -- GUERRERO SELECCIONADO --
         # Imagen del guerrero seleccionado

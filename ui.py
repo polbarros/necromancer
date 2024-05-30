@@ -1,6 +1,6 @@
 import pygame, sys
 
-class Button():
+class Button:
     """Esta clase nos permite crear varios objetos de tipo botón con ciertos parámetros que permitirán a cada
     instancia un cierto nivel de versatilidad y reutilización."""
     def __init__(self, x, y, image, image_h, scale):
@@ -42,7 +42,7 @@ class Button():
             surface.blit(self.image, (self.rect.x, self.rect.y)) # Posiciona la imagen.
 
 
-class Health_bar():
+class HealthBar:
     '''Esta clase nos permite crear varios objetos tipo barra de salud animada'''
     def __init__(self, x, y, current_health, target_health, max_health,
                  health_bar_length, health_bar_height, health_change_speed):
