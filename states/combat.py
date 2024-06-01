@@ -1,3 +1,4 @@
+import animations
 import db
 import models
 from sqlalchemy import desc
@@ -19,7 +20,7 @@ class Combat(State):
         # Debemos crear un nuevo manager porque de lo contrario cargaría los elementos de otros archivos de estado.
         self.manager_combat = pygame_gui.UIManager((self.game.W, self.game.H), "theme.json")
 
-        # ESCENARIO DE COMBATE
+        # -- ESCENARIO DE COMBATE --
         self.scenario = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "combat_bg_cover.png"))
         self.scenario.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
 
@@ -27,26 +28,41 @@ class Combat(State):
         # Toma de la información de la BD sobre el guerrero escogido
         self.warrior = db.session.query(models.Warrior).filter_by(type="player").first()
 
-        # Imágen del guerrero escogido
+        # -- ANIMACIONES --
+        self.sprites = [] # Lista que acumulará las instancias de animaciones para ser incorporadas al grupo de sprites.
+
+        # Imágen y animaciones del guerrero escogido
         if self.warrior.name == "Samurai":
             self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "samurai.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_1.png"))
+            # Instancias de animaciones del Samurai
+            self.warrior_ani_dmg = animations.Animation(-30, self.game.H - 500, "samurai_dmg")
+            self.sprites.append(self.warrior_ani_dmg)
         elif self.warrior.name == "Kunoichi":
             self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "kunoichi.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_2.png"))
+            # Instancias de animaciones de la Kunoichi
+            self.warrior_ani_dmg = animations.Animation(15, self.game.H - 446, "kunoichi_dmg")
+            self.sprites.append(self.warrior_ani_dmg)
         elif self.warrior.name == "Ashigaru":
             self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "ashigaru.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_3.png"))
+            # Instancias de animaciones del Ashigaru
+            self.warrior_ani_dmg = animations.Animation(-85, self.game.H - 524, "ashigaru_dmg")
+            self.sprites.append(self.warrior_ani_dmg)
         elif self.warrior.name == "Inugami":
             self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "inugami.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_4.png"))
+            # Instancias de animaciones del Inugami
+            self.warrior_ani_dmg = animations.Animation(-30, self.game.H - 476, "inugami_dmg")
+            self.sprites.append(self.warrior_ani_dmg)
 
         # -- GUERRERO ENEMIGO --
-            # Datos aleatorios para los enemigos: nivel y puntos de salud.
+        # Datos aleatorios para los enemigos: nivel y puntos de salud.
         level_enemy = random.randint(self.warrior.level, self.warrior.level + 1)
         health_enemy = random.randint(30, 35) + (self.warrior.level * 2)
         # Valores posibles de los enemigos. Tuplas con los datos para crear objetos.
@@ -198,6 +214,14 @@ class Combat(State):
         self.space_key = False # Estado del uso de la barra espaciadora
         self.i_message = "" # Mensaje que deberá mostrarse en la text_box.
 
+        # ANIMACIONES (AGRUPACIÓN)
+        # Instancias para las animaciones del entorno (enemigos y otras)
+
+        # Creamos los sprites y los grupos (elementos propios de pygame para animar)
+        self.moving_sprites = pygame.sprite.Group() # Se crea un grupo de sprites para manejarlos a la vez.
+        self.moving_sprites.add(*self.sprites) # Se añade la lista de animaciones al grupo de sprites.
+        # El asterisco (*) descomprime la lista en argumentos individuales
+
     def calculate_health_percent(self):
         # Función para calcular el porcentaje de salud del guerrero seleccionado (para la barra de salud).
         return (self.warrior.hp_current/self.warrior.hp_max)*100
@@ -214,6 +238,9 @@ class Combat(State):
         # Actualiza los efectos animados y otros elementos de la caja de texto de mensajes para el jugador
         self.text_box.update(delta_time)
         self.text_box.update_text_effect(delta_time)
+
+        # Actualiza el grupo de sprites y establecemos una velocidad de animación
+        self.moving_sprites.update(0.2)
 
         # Condiciones para la presentación de botones de ataque simple
         if self.warrior.attack_roll == 20:
@@ -527,6 +554,7 @@ class Combat(State):
                 amount += i // 2
             if attacker.type == 'player':
                 self.warrior.hp_current -= amount
+                self.warrior_ani_dmg.animate() # Animación de daño
             elif attacker.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Critical Miss! {} failed attack and lost {} HP'.format(attacker.name, amount))
@@ -543,9 +571,10 @@ class Combat(State):
                 i -= target.armor  # Reducimos el valor de las tiradas de daño dependiendo del nivel de armadura.
                 if i < 0:
                     i = 0
-                amount += i // 2
+                amount += i // 2 # Con el parry recibimos la mitad del daño.
             if target.type == 'player':
                 self.warrior.hp_current -= amount
+                self.warrior_ani_dmg.animate()  # Animación de daño
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Parry! {} lost only {} HP'.format(target.name, amount))
@@ -560,6 +589,7 @@ class Combat(State):
                 amount += i
             if target.type == 'player':
                 self.warrior.hp_current -= amount
+                self.warrior_ani_dmg.animate()  # Animación de daño
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Hit! {} lost {} HP'.format(target.name, amount))
@@ -571,9 +601,10 @@ class Combat(State):
                 i -= target.armor  # Reducimos el valor de las tiradas de daño dependiendo del nivel de armadura.
                 if i < 0:
                     i = 0
-                amount += (i * 2)
+                amount += (i * 2) # Con critical hit se recibe el doble del daño.
             if target.type == 'player':
                 self.warrior.hp_current -= amount
+                self.warrior_ani_dmg.animate()  # Animación de daño
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
             print('Hit! {} lost {} HP'.format(target.name, amount))
@@ -810,17 +841,11 @@ class Combat(State):
         # ESCENARIO
         display.blit(self.scenario, (0, 0))
 
-        # -- GUERRERO SELECCIONADO --
-        # Imagen del guerrero seleccionado
-        if self.warrior.name == "Samurai":
-            display.blit(self.warrior_img, (-30, self.game.H - 500))
-        if self.warrior.name == "Kunoichi":
-            display.blit(self.warrior_img, (15, self.game.H - 446))
-        if self.warrior.name == "Ashigaru":
-            display.blit(self.warrior_img, (-85, self.game.H - 524))
-        if self.warrior.name == "Inugami":
-            display.blit(self.warrior_img, (-30, self.game.H - 476))
+        # Función para dibujar las animaciones
+        self.moving_sprites.draw(display)
+        pygame.display.flip()
 
+        # -- GUERRERO SELECCIONADO --
         # Mostramos la vida actual y máxima del guerrero seleccionado
         self.game.draw_text_right(display, (str(self.warrior.hp_current))+" / "+(str(self.warrior.hp_max)),
                                   (57, 44, 49), self.game.W - 15, self.game.H // 2 + 80)
@@ -890,5 +915,8 @@ class Combat(State):
             elif self.last_enemy.stance == 4:
                 display.blit(self.enemy_stancebar_img_4, (70, 128))
 
+
         # Función para dibujar todos los elementos de la librería pygame_gui iniciados en __init__
         self.manager_combat.draw_ui(display)
+
+

@@ -1,4 +1,4 @@
-import pygame, sys
+import pygame
 
 class Button:
     """Esta clase nos permite crear varios objetos de tipo botón con ciertos parámetros que permitirán a cada
