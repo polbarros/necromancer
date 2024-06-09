@@ -1,3 +1,5 @@
+import time
+
 import animations
 import db
 import models
@@ -24,12 +26,15 @@ class Combat(State):
         self.scenario = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "combat_bg_cover.png"))
         self.scenario.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
 
+        # -- ANIMACIONES --
+        # Lista que acumulará las instancias de animaciones para ser incorporadas al grupo de sprites.
+        self.sprites = []
+        #Hacemos una lista aparte para las animaciones de ataque para poder reproducirlas aparte en otra "capa"
+        self.sprites_att =[]
+
         # -- GUERRERO ESCOGIDO --
         # Toma de la información de la BD sobre el guerrero escogido
         self.warrior = db.session.query(models.Warrior).filter_by(type="player").first()
-
-        # -- ANIMACIONES --
-        self.sprites = [] # Lista que acumulará las instancias de animaciones para ser incorporadas al grupo de sprites.
 
         # Imágen y animaciones del guerrero escogido
         if self.warrior.name == "Samurai":
@@ -38,62 +43,87 @@ class Combat(State):
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_1.png"))
             # Instancias de animaciones del Samurai
             self.warrior_ani_dmg = animations.Animation(-30, self.game.H - 500, "samurai_dmg")
+            self.warrior_ani_pwr = animations.Animation(self.game.W - 256, 30, "samurai_pwr")
             self.sprites.append(self.warrior_ani_dmg)
+            self.sprites_att.append(self.warrior_ani_pwr)
         elif self.warrior.name == "Kunoichi":
             self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "kunoichi.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_2.png"))
             # Instancias de animaciones de la Kunoichi
             self.warrior_ani_dmg = animations.Animation(15, self.game.H - 446, "kunoichi_dmg")
+            self.warrior_ani_pwr = animations.Animation(self.game.W - 320, 60, "kunoichi_pwr")
             self.sprites.append(self.warrior_ani_dmg)
+            self.sprites_att.append(self.warrior_ani_pwr)
         elif self.warrior.name == "Ashigaru":
             self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "ashigaru.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_3.png"))
             # Instancias de animaciones del Ashigaru
             self.warrior_ani_dmg = animations.Animation(-85, self.game.H - 524, "ashigaru_dmg")
+            self.warrior_ani_pwr = animations.Animation(self.game.W - 256, 0, "ashigaru_pwr")
             self.sprites.append(self.warrior_ani_dmg)
+            self.sprites_att.append(self.warrior_ani_pwr)
         elif self.warrior.name == "Inugami":
             self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "inugami.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_4.png"))
             # Instancias de animaciones del Inugami
             self.warrior_ani_dmg = animations.Animation(-30, self.game.H - 476, "inugami_dmg")
+            self.warrior_ani_pwr = animations.Animation(self.game.W - 256, 0, "inugami_pwr")
             self.sprites.append(self.warrior_ani_dmg)
+            self.sprites_att.append(self.warrior_ani_pwr)
 
         # -- GUERRERO ENEMIGO --
         # Datos aleatorios para los enemigos: nivel y puntos de salud.
         level_enemy = random.randint(self.warrior.level, self.warrior.level + 1)
         health_enemy = random.randint(30, 35) + (self.warrior.level * 2)
+        dmg_base_enemy = level_enemy // 2
         # Valores posibles de los enemigos. Tuplas con los datos para crear objetos.
-        tuple_miko = ("Guardian Miko", level_enemy, 0, health_enemy, health_enemy, 1, 0, 3, 0, 0,
-                          True, True, 0, 2, 1, 4, False, 0, 20, 0, "enemy")
-        tuple_ministry = ("Swordsman of Ministry", level_enemy, 0, health_enemy, health_enemy, 1, 0, 0, 0, 0,
-                              True, True, 0, 1, 2, 1, False, 0, 20, 0, "enemy")
-        tuple_shinobi = ("Lone Shinobi", level_enemy, 0, health_enemy, health_enemy, 1, 0, 3, 0, 0,
-                             True, True, 0, 2, 1, 2, False, 0, 20, 0, "enemy")
-        tuple_kappas = ("Gang of Kappas", level_enemy, 0, health_enemy, health_enemy, 1, 3, 0, 0, 0,
-                            True, True, 0, 2, 3, 3, False, 0, 20, 0, "enemy")
+        tuple_miko = ("Guardian Miko", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 0, 4, 0, 0,
+                          True, True, 2, 2, 1, 4, False, 0, 20, 0, "enemy")
+        tuple_ministry = ("Swordsman of Ministry", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 0, 0, 0, 0,
+                              True, True, 1, 1, 2, 1, False, 0, 20, 0, "enemy")
+        tuple_shinobi = ("Lone Shinobi", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 2, 3, 0, 0,
+                             True, True, 1, 2, 1, 2, False, 0, 20, 0, "enemy")
+        tuple_kappas = ("Gang of Kappas", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 4, 0, 0, 0,
+                            True, True, 0, 3, 3, 3, False, 0, 20, 0, "enemy")
         # Diccionario de enemigos
         self.dict_enemies = {1: tuple_miko,
                              2: tuple_ministry,
                              3: tuple_shinobi,
                              4: tuple_kappas}
-        # Iniciamos el objeto de la clase combate con la creación de un enemigo
-        self.enemy_generator()
+
+
+        # Desempaquetamos las tuplas como parámetros para crear el objeto de la clase Warrior.
+        new_enemy = models.Warrior(*self.dict_enemies[random.randint(1, 4)]) # Creamos un nuevo enemigo
+        db.session.add(new_enemy) # Añadimos el nuevo enemigo a la base de datos.
+        db.session.commit() # Guardamos el registro.
 
         # Toma de la información de la BD sobre el último enemigo generado
-        self.last_enemy = db.session.query(models.Warrior).filter_by(type="enemy").order_by(desc(models.Warrior.id)).first()
+        self.last_enemy = db.session.query(models.Warrior).filter_by(type="enemy").order_by(
+            desc(models.Warrior.id)).first()
 
-        # Cargamos las imágenes de los enemigos y de las barras de postura de los enemigos
-        self.miko_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "miko.png"))
-        self.miko_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
-        self.ministry_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "ministry.png"))
-        self.ministry_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
-        self.shinobi_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "shinobi.png"))
-        self.shinobi_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
-        self.kappas_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "kappas.png"))
-        self.kappas_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
+        # -- ÚLTIMO ENEMIGO --
+        # Generamos las instancias de animaciones de los enemigos y añadimos al grupo de sprites.
+        if self.last_enemy.name == "Guardian Miko":
+            # Instancias de animaciones de la Guardian Miko
+            self.last_enemy_ani_dmg = animations.Animation(self.game.W - 256, 40, "miko_dmg")
+            self.sprites.append(self.last_enemy_ani_dmg)
+        elif self.last_enemy.name == "Swordsman of Ministry":
+            # Instancias de animaciones del Swordsman of Ministry
+            self.last_enemy_ani_dmg = animations.Animation(self.game.W - 256, 0, "ministry_dmg")
+            self.sprites.append(self.last_enemy_ani_dmg)
+        elif self.last_enemy.name == "Lone Shinobi":
+            # Instancias de animaciones del Lone Shinobi
+            self.last_enemy_ani_dmg = animations.Animation(self.game.W - 256, 0, "shinobi_dmg")
+            self.sprites.append(self.last_enemy_ani_dmg)
+        elif self.last_enemy.name == "Gang of Kappas":
+            # Instancias de animaciones del Gang of Kappas
+            self.last_enemy_ani_dmg = animations.Animation(self.game.W - 256, 90, "kappas_dmg")
+            self.sprites.append(self.last_enemy_ani_dmg)
+
+        # Cargamos las imágenes de las barras de postura de los enemigos
         self.enemy_stancebar_img_1 = pygame.image.load(
             os.path.join(self.game.assets_dir, "sprites", "stance_1_enemy.png"))
         self.enemy_stancebar_img_2 = pygame.image.load(
@@ -102,6 +132,8 @@ class Combat(State):
             os.path.join(self.game.assets_dir, "sprites", "stance_3_enemy.png"))
         self.enemy_stancebar_img_4 = pygame.image.load(
             os.path.join(self.game.assets_dir, "sprites", "stance_4_enemy.png"))
+
+
 
         # -- OTROS ELEMENTOS --
         # El símbolo para indicar la armadura del guerrero seleccionado y el enemigo
@@ -124,7 +156,7 @@ class Combat(State):
             percent_method=self.calculate_enemy_health_percent,
             object_id='#last_enemy_health_bar')
 
-        # UI BOTONES DE COMBATE
+        # UI BOTONES DE COMBATE (y animaciones asociadas)
         self.button_attack_1d20 = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((self.game.W - 180,
                                                                                      self.game.H // 2 + 150),
                                                                                     (167, 40)),
@@ -169,6 +201,9 @@ class Combat(State):
                                                             manager=self.manager_combat,
                                                         tool_tip_text="Throw a bomb\n(30-50 dmg)",
                                                             object_id='#button_bomb')
+        self.bomb_ani = animations.Animation(self.game.W - 256, 0, "bomb")
+        self.sprites_att.append(self.bomb_ani)
+
         self.button_r_stance = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((self.game.W - 95,
                                                                                        self.game.H // 2 + 240),
                                                                                       (40, 40)),
@@ -200,7 +235,7 @@ class Combat(State):
                                                                                          (147, 30)),
                                                                text="Sacrifice",
                                                                manager=self.manager_combat,
-                                                               tool_tip_text="Stop this duel",
+                                                               tool_tip_text="Discard this warrior",
                                                                object_id="#button_attack_1d12")
 
 
@@ -215,12 +250,20 @@ class Combat(State):
         self.i_message = "" # Mensaje que deberá mostrarse en la text_box.
 
         # ANIMACIONES (AGRUPACIÓN)
-        # Instancias para las animaciones del entorno (enemigos y otras)
-
+        # Personajes (guerrero y enemigo)
         # Creamos los sprites y los grupos (elementos propios de pygame para animar)
         self.moving_sprites = pygame.sprite.Group() # Se crea un grupo de sprites para manejarlos a la vez.
         self.moving_sprites.add(*self.sprites) # Se añade la lista de animaciones al grupo de sprites.
         # El asterisco (*) descomprime la lista en argumentos individuales
+
+        # Ataques (aparte para poder superponer sobre los sprites de los personajes)
+        # Creamos los sprites y los grupos (elementos propios de pygame para animar)
+        self.moving_sprites_att = pygame.sprite.Group()  # Se crea un grupo de sprites para manejarlos a la vez.
+        self.moving_sprites_att.add(*self.sprites_att)  # Se añade la lista de animaciones al grupo de sprites.
+        # El asterisco (*) descomprime la lista en argumentos individuales
+
+        # Agrupación de sprites para textos animados para mostrar los daños
+        self.damage_text_group = pygame.sprite.Group()
 
     def calculate_health_percent(self):
         # Función para calcular el porcentaje de salud del guerrero seleccionado (para la barra de salud).
@@ -232,6 +275,10 @@ class Combat(State):
 
     def update(self, delta_time):
 
+        # Toma de la información de la BD sobre el último enemigo generado
+        self.last_enemy = db.session.query(models.Warrior).filter_by(type="enemy").order_by(
+            desc(models.Warrior.id)).first()
+
         # Actualizador del manager de los elementos pygame_gui
         self.manager_combat.update(delta_time)
 
@@ -241,6 +288,10 @@ class Combat(State):
 
         # Actualiza el grupo de sprites y establecemos una velocidad de animación
         self.moving_sprites.update(0.2)
+        self.moving_sprites_att.update(0.2)
+
+        # Actualiza los textos que muestran en daño en pantalla
+        self.damage_text_group.update()
 
         # Condiciones para la presentación de botones de ataque simple
         if self.warrior.attack_roll == 20:
@@ -292,28 +343,20 @@ class Combat(State):
 
                 self.text_box.set_active_effect(pygame_gui.TEXT_EFFECT_TYPING_APPEAR, params={'time_per_letter': 0.1})
 
-        elif self.warrior.hp_current <= 0:
-            for event in pygame.event.get():
-                if event.type == pygame_gui.UI_TEXT_EFFECT_FINISHED:
-                    if event.ui_element == self.text_box:
-                        if event.effect == pygame_gui.TEXT_EFFECT_TYPING_APPEAR:
-                            db.session.commit()
-                            new_state = Over(self.game)  # Creamos un objeto de la clase estado de recompensa.
-                            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
+        elif self.warrior.hp_current <= 0 and self.space_key == True:
+            self.i_message = ''
+            self.text_box.hide()  # Escondemos la caja de texto
+            db.session.commit()
+            new_state = Over(self.game)  # Creamos un objeto de la clase estado de recompensa.
+            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
 
 
-        elif self.last_enemy.hp_current <= 0:
-            for event in pygame.event.get():
-                if event.type == pygame_gui.UI_TEXT_EFFECT_FINISHED:
-                    if event.ui_element == self.text_box:
-                        if event.effect == pygame_gui.TEXT_EFFECT_TYPING_APPEAR:
-                            db.session.commit()
-                            self.enemy_generator()  # Creamos el próximo enemigo
-                            self.last_enemy = db.session.query(models.Warrior).filter_by(type="enemy").order_by(
-                                desc(models.Warrior.id)).first()
-                            new_state = Reward(self.game)  # Creamos un objeto de la clase estado de recompensa.
-                            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
-
+        elif self.last_enemy.hp_current <= 0 and self.space_key == True:
+            self.i_message = ''
+            self.text_box.hide()  # Escondemos la caja de texto
+            db.session.commit()
+            new_state = Reward(self.game)  # Creamos un objeto de la clase estado de recompensa.
+            new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
 
     def player_turn(self):
         if self.warrior.attack_roll == 20 and self.button_attack_1d20.check_pressed():
@@ -357,6 +400,7 @@ class Combat(State):
             self.message(self.i_message)
 
         elif self.warrior.bomb >= 1 and self.button_bomb.check_pressed():
+            self.bomb_ani.animate()  # Animación de bomba
             self.last_enemy.hp_current -= random.randint(30, 50)  # El enemigo pierde mucha vida.
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.bomb -= 1
@@ -380,6 +424,12 @@ class Combat(State):
             self.i_message = '{} recovered the roll attack<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
+        # Opción para salir del combate sacrificando al guerrero seleccionado para escoger otro
+        elif self.button_sacrifice.check_pressed():
+            from states.choose import Choose
+            Choose.first_time = True  # Volvemos a considerar la pantalla de Choose como nueva
+            self.exit_state(-1) # Salimos del combate y lo borramos del stack de estados.
+
     def disable_buttons(self):
         # Deshabilitamos los botones para el jugador
         self.button_attack_1d20.disable()
@@ -390,6 +440,7 @@ class Combat(State):
         self.button_bomb.disable()
         self.button_r_stance.disable()
         self.button_r_roll.disable()
+        self.button_sacrifice.disable()
 
     def enemy_turn(self):
         odds = random.randint(1, 100)
@@ -430,6 +481,8 @@ class Combat(State):
             self.button_r_stance.enable()
         if self.warrior.roll_recovery >= 1:
             self.button_r_roll.enable()
+        # Siempre que sea el turno del jugador podrá descartar a su guerrero
+        self.button_sacrifice.enable()
 
     def process_gui_events(self, event):
         self.manager_combat.process_events(event)  # Revisión de eventos propios de los elementos de pygame_gui.
@@ -443,15 +496,7 @@ class Combat(State):
                 self.space_key = False
                 print(self.space_key)
 
-
     #  -- FUNCIONES PROPIAS DEL INICIO Y DESARROLLO DEL COMBATE --
-    def enemy_generator(self):
-        # Esta función sirve para generar y registrar nuevos enemigos en la base de datos.
-        # Mediante este método desempaquetamos las tuplas como parámetros para crear el objeto de la clase Warrior.
-        new_enemy = models.Warrior(*self.dict_enemies[random.randint(1, 4)])
-        db.session.add(new_enemy)
-        db.session.commit()
-
     def roll_attack(self, dice):
         # Función para realizar una tirada de dados para realizar ataques normales.
         if dice == 20:
@@ -545,68 +590,121 @@ class Combat(State):
         - Atacante
         - Resultado de la tirada de ataque contra la postura del objetivo
         - Lista de resultados de las tiradas de dados de daño"""
-        amount = 0
+        d = 0 # daño individual recibido
+        amount = 0 # daño acumulado
         if judgment == "Critical Miss":
             for i in dices:
+                i += attacker.dmg_base
                 i -= attacker.armor  # Reducimos el valor de las tiradas de daño dependiendo del nivel de armadura.
                 if i < 0:
                     i = 0
-                amount += i // 2
+                d = i // 2
+                if attacker.type == 'player':
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (152, 31, 48))
+                    self.damage_text_group.add(damage_text)
+                elif attacker.type == 'enemy':
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (152, 31, 48))
+                    self.damage_text_group.add(damage_text)
+                amount += d # Acumulamos el daño
             if attacker.type == 'player':
                 self.warrior.hp_current -= amount
-                self.warrior_ani_dmg.animate() # Animación de daño
+                if amount > 0:
+                    self.warrior_ani_dmg.animate() # Animación de daño
             elif attacker.type == 'enemy':
                 self.last_enemy.hp_current -= amount
+                if amount > 0:
+                    self.last_enemy_ani_dmg.animate() # Animación de daño
             print('Critical Miss! {} failed attack and lost {} HP'.format(attacker.name, amount))
             self.i_message = '<b>Critical Miss</b><br>{} failed attack ' \
                                       'and lost {} HP<br>[SPACE] to continue'.format(attacker.name, amount)
 
         elif judgment == "Miss":
+            if target.type == 'player':
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), "MISS",
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+            elif target.type == 'enemy':
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), "MISS",
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
             print('Miss! {} failed attack'.format(attacker.name))
             self.i_message = '<b>Miss</b><br>{} failed attack<br>' \
                                       '[SPACE] to continue'.format(attacker.name)
 
         elif judgment == "Parry":
             for i in dices:
+                i += attacker.dmg_base
                 i -= target.armor  # Reducimos el valor de las tiradas de daño dependiendo del nivel de armadura.
                 if i < 0:
                     i = 0
-                amount += i // 2 # Con el parry recibimos la mitad del daño.
+                d = i // 2 # Con el parry recibimos la mitad del daño.
+                if target.type == 'player':
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (255, 190, 44))
+                    self.damage_text_group.add(damage_text)
+                elif target.type == 'enemy':
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (255, 190, 44))
+                    self.damage_text_group.add(damage_text)
+                amount += d  # Acumulamos el daño
             if target.type == 'player':
                 self.warrior.hp_current -= amount
-                self.warrior_ani_dmg.animate()  # Animación de daño
+                if amount > 0:
+                    self.warrior_ani_dmg.animate()  # Animación de daño
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
+                if amount > 0:
+                    self.last_enemy_ani_dmg.animate()  # Animación de daño
             print('Parry! {} lost only {} HP'.format(target.name, amount))
             self.i_message = '<b>Parry</b><br>{} lost only {} HP<br>' \
                                       '[SPACE] to continue'.format(target.name, amount)
 
         elif judgment == "Hit":
             for i in dices:
+                i += attacker.dmg_base
                 i -= target.armor  # Reducimos el valor de las tiradas de daño dependiendo del nivel de armadura.
                 if i < 0:
                     i = 0
-                amount += i
+                d = i
+                if target.type == 'player':
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (251, 107, 29))
+                    self.damage_text_group.add(damage_text)
+                elif target.type == 'enemy':
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (251, 107, 29))
+                    self.damage_text_group.add(damage_text)
+                amount += d # Acumulamos el daño
             if target.type == 'player':
                 self.warrior.hp_current -= amount
-                self.warrior_ani_dmg.animate()  # Animación de daño
+                if amount > 0:
+                    self.warrior_ani_dmg.animate()  # Animación de daño
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
+                if amount > 0:
+                    self.last_enemy_ani_dmg.animate()  # Animación de daño
             print('Hit! {} lost {} HP'.format(target.name, amount))
             self.i_message = '<b>Hit</b><br>{} lost {} HP<br>[SPACE] ' \
                                       'to continue'.format(target.name, amount)
 
         elif judgment == "Critical Hit":
             for i in dices:
+                i += attacker.dmg_base
                 i -= target.armor  # Reducimos el valor de las tiradas de daño dependiendo del nivel de armadura.
                 if i < 0:
                     i = 0
-                amount += (i * 2) # Con critical hit se recibe el doble del daño.
+                d = i * 2 # Con critical hit se recibe el doble del daño.
+                if target.type == 'player':
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (152, 31, 48))
+                    self.damage_text_group.add(damage_text)
+                elif target.type == 'enemy':
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (152, 31, 48))
+                    self.damage_text_group.add(damage_text)
+                amount += d # Acumulamos el daño
             if target.type == 'player':
                 self.warrior.hp_current -= amount
-                self.warrior_ani_dmg.animate()  # Animación de daño
+                if amount > 0:
+                    self.warrior_ani_dmg.animate()  # Animación de daño
             elif target.type == 'enemy':
                 self.last_enemy.hp_current -= amount
+                if amount > 0:
+                    self.last_enemy_ani_dmg.animate()  # Animación de daño
             print('Hit! {} lost {} HP'.format(target.name, amount))
             self.i_message = '<b>Critical Hit</b><br>{} lost {} HP<br>' \
                                       '[SPACE]to continue'.format(target.name, amount)
@@ -621,7 +719,14 @@ class Combat(State):
                 number = random.randint(1, 8) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                recovery_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                (93, 167, 93))
+                self.damage_text_group.add(recovery_text)
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d  # Acumulamos daño
             self.last_enemy.hp_current -= amount
             self.warrior.hp_current += amount
             if self.warrior.hp_current > self.warrior.hp_max:
@@ -636,9 +741,13 @@ class Combat(State):
                 number = random.randint(1, 4) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d # Acumulamos daño
             self.last_enemy.hp_current -= amount
-            self.last_enemy.stance_weak = True
+            self.last_enemy.stance_weak = True # Debilita la postura del enemigo
             print("{} used Fatal Flaw and weakened the enemy's stance".format(attacker.name))
             self.i_message = '{} used Fatal Flaw and weakened the enemy\'s stance<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -649,7 +758,11 @@ class Combat(State):
                 number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d # Acumulamos daño
             self.last_enemy.hp_current -= amount
             self.warrior.stance_weak = True  # Debilita la postura del guerrero seleccionado
             print("{} used Direct Shot and weakened its own stance".format(attacker.name))
@@ -662,9 +775,13 @@ class Combat(State):
                 number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d
             self.last_enemy.hp_current -= amount
-            self.last_enemy.attack_roll = 12
+            self.last_enemy.attack_roll = 12 # Reduce el dado de tirada de ataque del enemigo.
             print("{} used Curse of Revenge and weakened enemy's roll attack".format(attacker.name))
             self.i_message = '{} used Curse of Revenge and weakened enemy\'s roll attack<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -675,7 +792,14 @@ class Combat(State):
                 number = random.randint(1, 8) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                recovery_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (93, 167, 93))
+                self.damage_text_group.add(recovery_text)
+                amount += d #Acumulamos daño
             self.warrior.hp_current -= amount
             self.last_enemy.hp_current += amount
             if self.last_enemy.hp_current > self.last_enemy.hp_max:
@@ -690,7 +814,11 @@ class Combat(State):
                 number = random.randint(1, 4) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d #Acumulamos daño
             self.warrior.hp_current -= amount
             self.warrior.stance_weak = True
             print("{} used Stunner Cut and weakened warrior's stance".format(attacker.name))
@@ -703,7 +831,11 @@ class Combat(State):
                 number = random.randint(1, 2) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d  # Acumulamos daño
             self.warrior.hp_current -= amount
             self.warrior.attack_roll = 12
             print("{} used Caltrops and weakened warrior's roll attack".format(attacker.name))
@@ -711,13 +843,24 @@ class Combat(State):
                              '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Gang of Kappas":
-            amount_necrotic = 0
+            amount = 0
             for i in range(3):
-                number = random.randint(1, 4) + attacker.dmg_necrotic - self.warrior.res_necrotic
+                number = random.randint(1, 4) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount_necrotic += number
-            self.warrior.hp_current -= amount_necrotic
+                number_necrotic = attacker.dmg_necrotic - self.warrior.res_necrotic
+                if number_necrotic < 0:
+                    number_necrotic = 0
+                d = number
+                d_necrotic = number_necrotic
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                damage_text_necrotic = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d_necrotic),
+                                                    (105, 79, 98))
+                self.damage_text_group.add(damage_text_necrotic)
+                amount += d + d_necrotic # Acumulamos daño
+            self.warrior.hp_current -= amount
             print("{} used Terrible Jaws".format(attacker.name))
             self.i_message = '{} used Terrible Jaws<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -728,11 +871,16 @@ class Combat(State):
 
         if attacker.name == "Samurai":
             amount = 0
+            self.warrior_ani_pwr.animate() #Animación del ataque poderoso
             for i in range(3):
                 number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d
             self.last_enemy.hp_current -= amount
             print("{} used Triple Death".format(attacker.name))
             self.i_message = '{} used Triple Death<br>' \
@@ -740,11 +888,16 @@ class Combat(State):
 
         elif attacker.name == "Kunoichi":
             amount = 0
+            self.warrior_ani_pwr.animate()  # Animación del ataque poderoso
             for i in range(10):
                 number = random.randint(1, 4) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d
             self.last_enemy.hp_current -= amount
             print("{} used Wasp Rain".format(attacker.name))
             self.i_message = '{} used Wasp Rain<br>' \
@@ -752,27 +905,46 @@ class Combat(State):
 
         elif attacker.name == "Ashigaru":
             amount = 0
+            self.warrior_ani_pwr.animate()  # Animación del ataque poderoso
             for i in range(5):
                 number = random.randint(1, 10) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d
             self.last_enemy.hp_current -= amount
-            self.warrior.hp_current -= random.randint(1, 6) - self.warrior.armor  # Daño colateral sobre Ashigaru
+            colateral_dmg = random.randint(1, 6) - self.warrior.armor  # Daño colateral sobre Ashigaru
+            damage_text_colateral = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(colateral_dmg),
+                                                (152, 31, 48))
+            self.damage_text_group.add(damage_text_colateral)
+            self.warrior.hp_current -= colateral_dmg
             print("{} used Force and Fire".format(attacker.name))
             self.i_message = '{} used Force and Fire<br>' \
                              '[SPACE] to continue'.format(attacker.name)
 
         elif attacker.name == "Inugami":
             amount = 0
+            self.warrior_ani_pwr.animate()  # Animación del ataque poderoso
             for i in range(4):
                 number = random.randint(1, 8) + attacker.dmg_base - self.last_enemy.armor
                 if number < 0:
                     number = 0
-                amount += number
+                number_necrotic = attacker.dmg_necrotic - self.last_enemy.res_necrotic
+                if number_necrotic < 0:
+                    number_necrotic = 0
+                d = number
+                d_necrotic = number_necrotic
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                damage_text_necrotic = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d_necrotic),
+                                                    (105, 79, 98))
+                self.damage_text_group.add(damage_text_necrotic)
+                amount += d + d_necrotic
             self.last_enemy.hp_current -= amount
-            amount_necrotic = random.randint(1, 6) + attacker.dmg_necrotic - self.last_enemy.res_necrotic
-            self.last_enemy.hp_current -= amount_necrotic
             print("{} used Putrid Bite".format(attacker.name))
             self.i_message = '{} used Putrid Bite<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -783,11 +955,21 @@ class Combat(State):
                 number = random.randint(1, 10) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount += number
+                number_randiant = attacker.dmg_radiant - self.warrior.res_radiant
+                if number_randiant < 0:
+                    number_randiant = 0
+                d = number
+                d_radiant = number_randiant
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                damage_text_radiant = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                             str(d_radiant),
+                                                             (255, 196, 47))
+                self.damage_text_group.add(damage_text_radiant)
+                amount += d + d_radiant #Acumulamos daño
             self.warrior.hp_current -= amount
             self.last_enemy.armor += 3
-            amount_radiant = random.randint(1, 4) + attacker.dmg_radiant - self.warrior.res_radiant
-            self.last_enemy.hp_current -= amount_radiant
             print("{} used Radiant Double Arrow".format(attacker.name))
             self.i_message = '{} used Radiant Double Arrow<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -798,7 +980,11 @@ class Combat(State):
                 number = random.randint(1, 10) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d
             self.warrior.hp_current -= amount
             self.warrior.stance_weak = True
             print("{} used Crossed Strikes".format(attacker.name))
@@ -811,7 +997,11 @@ class Combat(State):
                 number = random.randint(1, 6) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d
             self.warrior.hp_current -= amount
             self.warrior.stance_weak = True
             print("{} used Weakener Stab".format(attacker.name))
@@ -824,7 +1014,11 @@ class Combat(State):
                 number = random.randint(1, 8) + attacker.dmg_base - self.warrior.armor
                 if number < 0:
                     number = 0
-                amount += number
+                d = number
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
+                                                    (152, 31, 48))
+                self.damage_text_group.add(damage_text)
+                amount += d
             self.warrior.hp_current -= amount
             print("{} used Shell Hits".format(attacker.name))
             self.i_message = '{} used Shell Hits<br>' \
@@ -841,9 +1035,10 @@ class Combat(State):
         # ESCENARIO
         display.blit(self.scenario, (0, 0))
 
-        # Función para dibujar las animaciones
-        self.moving_sprites.draw(display)
-        pygame.display.flip()
+        # Dibujo de las animaciones
+        self.moving_sprites.draw(display) #personajes
+        self.moving_sprites_att.draw(display) #ataques
+        self.damage_text_group.draw(display) #daños
 
         # -- GUERRERO SELECCIONADO --
         # Mostramos la vida actual y máxima del guerrero seleccionado
@@ -874,16 +1069,6 @@ class Combat(State):
                                   self.game.W - 15, self.game.H // 2 + 328)
 
         # -- ÚLTIMO ENEMIGO --
-        # Imagen del último enemigo generado
-        if self.last_enemy.name == "Guardian Miko":
-            display.blit(self.miko_img, (self.game.W - 256, 0))
-        elif self.last_enemy.name == "Swordsman of Ministry":
-            display.blit(self.ministry_img, (self.game.W - 256, 0))
-        elif self.last_enemy.name == "Lone Shinobi":
-            display.blit(self.shinobi_img, (self.game.W - 256, 0))
-        elif self.last_enemy.name == "Gang of Kappas":
-            display.blit(self.kappas_img, (self.game.W - 256, 0))
-
         # Nombre del enemigo y nivel.
         self.game.draw_text_left(display, (str(self.last_enemy.name)), (57, 44, 49), 30, 30)
         self.game.draw_text_left(display, "lvl. " + (str(self.last_enemy.level)), (57, 44, 49), 30, 48)

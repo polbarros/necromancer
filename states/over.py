@@ -65,10 +65,14 @@ class Over(State):
             db.session.query(models.Warrior).delete()  # Borramos los datos en la BD
             self.necromancer.selection = False # Deseleccionamos al jugador
             db.session.commit()
+            from states.choose import Choose
+            Choose.first_time = True  # Volvemos a considerar la pantalla de Choose como nueva
             self.exit_state(-3)  # Salimos del estado over y lo borramos "over", "combat" y "choose".
         elif self.retry_button.action():
             db.session.query(models.Warrior).delete()  # Borramos los datos en la BD
             db.session.commit()
+            from states.choose import Choose
+            Choose.first_time = True # Volvemos a considerar la pantalla de Choose como nueva
             self.exit_state(-2)  # Salimos del estado over y lo borramos "over" y "combat".
 
     def render(self, display):

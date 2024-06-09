@@ -86,4 +86,3 @@ class Warrior(db.Base): #Hereda de la clase Base del fichero db.py
 
     def __str__(self):
         return "Warrior {}: level {}, with {} HPMax". format(self.id, self.level, self.hp_max)
-

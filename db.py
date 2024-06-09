@@ -1,6 +1,6 @@
-'''Este archivo contiene la configuarión de la base de datos'''
+'''Este archivo contiene la configuración de la base de datos'''
 
-from sqlalchemy import create_engine, delete
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # El engine permite a SQLAlquemy comunicarse a la base de datos en un dialecto concreto.
@@ -17,9 +17,7 @@ en la base de datos todas las operaciones involucradas'''
 Session = sessionmaker(bind=engine)  # Poner la primera letra en mayúscula para crear una clase temporal.
 session = Session()
 
-# Vamos al fichero models.py en los modelos (clases) donde queremos que se transformen en tablas.
-# Le añadiremos esta variable y esto se encargará de mapear y vincular cada clase a cada tabla.
+'''En el fichero models.py, en los modelos (clases), donde queremos que se transformen en tablas, 
+le añadiremos esta clase como superclase de los modelos y esto se encargará de mapear y vincular 
+cada clase heredera de Base a cada tabla de la BD.'''
 Base = declarative_base()
-
-
-

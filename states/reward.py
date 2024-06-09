@@ -6,6 +6,7 @@ import pygame, os
 from states.state import State
 import ui
 
+
 class Reward(State):
     """Clase heredera de la clase State que define el estado del juego correspondiente a la pantalla de recompensa."""
     def __init__(self, game):
@@ -48,11 +49,9 @@ class Reward(State):
         # Toma de la información de la BD sobre el guerrero escogido
         self.warrior = db.session.query(models.Warrior).filter_by(type="player").first()
 
-        '''Toma de la información de la BD sobre el último enemigo derrotado
-        Con offset y limit escogemos solamente el enemigo derrotado. Nos saltamos el último enemigo
-        generado antes de pasar de fase combat a reward.'''
+        #Ahora el último enemigo es identificado como enemigo derrotado
         self.defeated_enemy = db.session.query(models.Warrior).filter_by(type="enemy").order_by(
-            desc(models.Warrior.id)).offset(1).limit(1).first()
+            desc(models.Warrior.id)).first()
 
         # Recompensas ofrecidas
         self.offensive_offer = random.randint(1, 5)
@@ -113,7 +112,10 @@ class Reward(State):
 
     def come_back(self):
         db.session.commit() # Guardamos los datos en la BD
-        self.exit_state(-1) # Salimos del estado reward, y lo borramos.
+        # Importación local para cambiar la variable de clase first_entry de la clase Choose
+        from states.choose import Choose
+        Choose.first_time = False
+        self.exit_state(-2) # Salimos del estado reward y combat, y los borramos.
 
     def render(self, display):
         #Renderizamos la pantalla de combate detrás del menu de recompensa
