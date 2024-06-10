@@ -14,22 +14,22 @@ class Reward(State):
         State.__init__(self,game)
 
         # Establecemos el fondo del menú
-        self.menu_bg = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "reward_bg.png"))
+        self.menu_bg = pygame.image.load(os.path.join(self.game.sprite_dir, "reward_bg.png"))
         self.menu_rect = self.menu_bg.get_rect()
         self.menu_rect.center = (self.game.W // 2, self.game.H // 2)
 
         #Posibles recompensas
         #Botón de recompensa ofensiva
-        self.offensive_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "offensive.png"))
+        self.offensive_img = pygame.image.load(os.path.join(self.game.sprite_dir, "offensive.png"))
         self.offensive_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro que ocupa el espacio de la transparencia.
-        self.offensive_img_h = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "offensive_h.png"))
+        self.offensive_img_h = pygame.image.load(os.path.join(self.game.sprite_dir, "offensive_h.png"))
         self.offensive_img_h.set_colorkey([0, 0, 0])  #Quitar el fondo negro de la transparencia.
         self.offensive_button = ui.Button((self.game.W // 2) - 135, self.game.H - 465,
                                           self.offensive_img, self.offensive_img_h, 1)
         #Botón de recompensa defensiva
-        self.defensive_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "defensive.png"))
+        self.defensive_img = pygame.image.load(os.path.join(self.game.sprite_dir, "defensive.png"))
         self.defensive_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro que ocupa el espacio de la transparencia.
-        self.defensive_img_h = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "defensive_h.png"))
+        self.defensive_img_h = pygame.image.load(os.path.join(self.game.sprite_dir, "defensive_h.png"))
         self.defensive_img_h.set_colorkey([0, 0, 0])  # Quitar el fondo negro de la transparencia.
         self.defensive_button = ui.Button((self.game.W // 2) + 20, self.game.H - 465,
                                           self.defensive_img, self.defensive_img_h, 1)

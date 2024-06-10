@@ -14,7 +14,7 @@ class Login(State):
                  e indicamos el archivo JSON para hacer el theming de los elementos de la librería."""
         self.manager_login = pygame_gui.UIManager((self.game.W, self.game.H), "theme.json")
 
-        # Cajas de texto
+        # Cajas de texto para inputs
         self.box_name = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((self.game.W // 2 - 45,
                                                                                        self.game.H // 2),
                                                                                       (150, 30)),
@@ -27,7 +27,7 @@ class Login(State):
                                                              object_id='#spell_text_entry')
         self.box_spell.set_text_hidden(is_hidden=True) # Para ocultar el texto del password
 
-        # Mensaje para comunicarse con el usuario.
+        # Mensaje para comunicarse con el usuario (jugador).
         self.message = ''
 
         # Botones
@@ -68,26 +68,29 @@ class Login(State):
 
 
         # Comprobamos la existencia de los datos tras pulsar "SUMMON" y en caso positivo entramos al juego.
-        if (len(text_name) != 0 or len(text_spell) >= 8) and self.button_summon.check_pressed():
+        elif (len(text_name) != 0 or len(text_spell) >= 8) and self.button_summon.check_pressed():
             self.necromancer = db.session.query(models.Login).filter_by(name=text_name, password=text_spell).first()
             if self.necromancer:
-                self.necromancer.selection = True # Indicamos que el jugador está escogido
+                self.necromancer.selection = True # Indicamos que el jugador está seleccionado
                 db.session.commit()
-                new_state = Choose(self.game)
-                new_state.enter_state()
+                new_state = Choose(self.game) # Creamos estado nuevo. Objeto de la clase Choose.
+                new_state.enter_state() # Entramos en el estado Choose.
             else:
                 self.message = "Necromancer not found"
 
         # Comprobamos la existencia de los datos tras pulsar "New necromancer" y en caso negativo los registramos.
-        if (len(text_name) != 0 or len(text_spell) >= 8) and self.button_new_necromancer.check_pressed():
-            # Creamos un nuevo objeto de la clase Login que incluiremos en la base de datos.
-            new_necromancer = models.Login(name=text_name, password=text_spell, max_score=0, selection=False)
-            db.session.add(new_necromancer)
-            self.message = "Necromancer registered successfully"
-            db.session.commit()
+        elif (len(text_name) != 0 or len(text_spell) >= 8) and self.button_new_necromancer.check_pressed():
+            necromancer_exist = db.session.query(models.Login).filter_by(name=text_name, password=text_spell).first()
+            if necromancer_exist:
+                self.message = "Necromancer already exist"
+            else:
+                # Creamos un nuevo objeto de la clase modelo Login que incluiremos en la base de datos.
+                new_necromancer = models.Login(name=text_name, password=text_spell, max_score=0, selection=False)
+                db.session.add(new_necromancer)
+                self.message = "Necromancer registered successfully"
+                db.session.commit()
         else:
             pass
-
 
     def render(self, display):
 
@@ -106,6 +109,5 @@ class Login(State):
         # Texto para los títulos de las cajas de texto.
         self.game.draw_text(display, "Name", (57, 44, 49), self.game.W // 2 - 75, self.game.H // 2 + 15)
         self.game.draw_text(display, "Spell", (57, 44, 49), self.game.W // 2 - 75, self.game.H // 2 + 45)
-        # Función para dibujar todos los elementos de pygame_gui iniciados en __init__
+        # Función para dibujar todos los elementos de pygame_gui iniciados en el constructor (__init__).
         self.game.manager.draw_ui(display)
-

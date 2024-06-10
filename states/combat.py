@@ -1,5 +1,3 @@
-import time
-
 import animations
 import db
 import models
@@ -19,7 +17,7 @@ class Combat(State):
     def __init__(self, game):
         State.__init__(self, game)
         # El manager de pygame_gui para el estado de combate
-        # Debemos crear un nuevo manager porque de lo contrario cargaría los elementos de otros archivos de estado.
+        # Debemos crear un nuevo manager porque de lo contrario cargaría los elementos de otros estados.
         self.manager_combat = pygame_gui.UIManager((self.game.W, self.game.H), "theme.json")
 
         # -- ESCENARIO DE COMBATE --
@@ -38,36 +36,36 @@ class Combat(State):
 
         # Imágen y animaciones del guerrero escogido
         if self.warrior.name == "Samurai":
-            self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "samurai.png"))
+            self.warrior_img = pygame.image.load(os.path.join(self.game.sprite_dir, "samurai.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
-            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_1.png"))
+            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.sprite_dir, "stance_1.png"))
             # Instancias de animaciones del Samurai
             self.warrior_ani_dmg = animations.Animation(-30, self.game.H - 500, "samurai_dmg")
             self.warrior_ani_pwr = animations.Animation(self.game.W - 256, 30, "samurai_pwr")
             self.sprites.append(self.warrior_ani_dmg)
             self.sprites_att.append(self.warrior_ani_pwr)
         elif self.warrior.name == "Kunoichi":
-            self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "kunoichi.png"))
+            self.warrior_img = pygame.image.load(os.path.join(self.game.sprite_dir, "kunoichi.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
-            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_2.png"))
+            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.sprite_dir, "stance_2.png"))
             # Instancias de animaciones de la Kunoichi
             self.warrior_ani_dmg = animations.Animation(15, self.game.H - 446, "kunoichi_dmg")
             self.warrior_ani_pwr = animations.Animation(self.game.W - 320, 60, "kunoichi_pwr")
             self.sprites.append(self.warrior_ani_dmg)
             self.sprites_att.append(self.warrior_ani_pwr)
         elif self.warrior.name == "Ashigaru":
-            self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "ashigaru.png"))
+            self.warrior_img = pygame.image.load(os.path.join(self.game.sprite_dir, "ashigaru.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
-            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_3.png"))
+            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.sprite_dir, "stance_3.png"))
             # Instancias de animaciones del Ashigaru
             self.warrior_ani_dmg = animations.Animation(-85, self.game.H - 524, "ashigaru_dmg")
             self.warrior_ani_pwr = animations.Animation(self.game.W - 256, 0, "ashigaru_pwr")
             self.sprites.append(self.warrior_ani_dmg)
             self.sprites_att.append(self.warrior_ani_pwr)
         elif self.warrior.name == "Inugami":
-            self.warrior_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "inugami.png"))
+            self.warrior_img = pygame.image.load(os.path.join(self.game.sprite_dir, "inugami.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
-            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_4.png"))
+            self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.sprite_dir, "stance_4.png"))
             # Instancias de animaciones del Inugami
             self.warrior_ani_dmg = animations.Animation(-30, self.game.H - 476, "inugami_dmg")
             self.warrior_ani_pwr = animations.Animation(self.game.W - 256, 0, "inugami_pwr")
@@ -75,19 +73,19 @@ class Combat(State):
             self.sprites_att.append(self.warrior_ani_pwr)
 
         # -- GUERRERO ENEMIGO --
-        # Datos aleatorios para los enemigos: nivel y puntos de salud.
+        # Datos para los enemigos: nivel y puntos de salud.
         level_enemy = random.randint(self.warrior.level, self.warrior.level + 1)
         health_enemy = random.randint(30, 35) + (self.warrior.level * 2)
         dmg_base_enemy = level_enemy // 2
         # Valores posibles de los enemigos. Tuplas con los datos para crear objetos.
-        tuple_miko = ("Guardian Miko", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 0, 4, 0, 0,
-                          True, True, 2, 2, 1, 4, False, 0, 20, 0, "enemy")
-        tuple_ministry = ("Swordsman of Ministry", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 0, 0, 0, 0,
-                              True, True, 1, 1, 2, 1, False, 0, 20, 0, "enemy")
-        tuple_shinobi = ("Lone Shinobi", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 2, 3, 0, 0,
-                             True, True, 1, 2, 1, 2, False, 0, 20, 0, "enemy")
-        tuple_kappas = ("Gang of Kappas", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy, 4, 0, 0, 0,
-                            True, True, 0, 3, 3, 3, False, 0, 20, 0, "enemy")
+        tuple_miko = ("Guardian Miko", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy,
+                      0, 4, 0, 0, True, True, 2, 2, 1, 4, False, 0, 20, 0, "enemy")
+        tuple_ministry = ("Swordsman of Ministry", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy,
+                          0, 0, 0, 0, True, True, 1, 1, 2, 1, False, 0, 20, 0, "enemy")
+        tuple_shinobi = ("Lone Shinobi", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy,
+                         2, 3, 0, 0, True, True, 1, 2, 1, 2, False, 0, 20, 0, "enemy")
+        tuple_kappas = ("Gang of Kappas", level_enemy, 0, health_enemy, health_enemy, dmg_base_enemy,
+                        4, 0, 0, 0, True, True, 0, 3, 3, 3, False, 0, 20, 0, "enemy")
         # Diccionario de enemigos
         self.dict_enemies = {1: tuple_miko,
                              2: tuple_ministry,
@@ -125,22 +123,22 @@ class Combat(State):
 
         # Cargamos las imágenes de las barras de postura de los enemigos
         self.enemy_stancebar_img_1 = pygame.image.load(
-            os.path.join(self.game.assets_dir, "sprites", "stance_1_enemy.png"))
+            os.path.join(self.game.sprite_dir, "stance_1_enemy.png"))
         self.enemy_stancebar_img_2 = pygame.image.load(
-            os.path.join(self.game.assets_dir, "sprites", "stance_2_enemy.png"))
+            os.path.join(self.game.sprite_dir, "stance_2_enemy.png"))
         self.enemy_stancebar_img_3 = pygame.image.load(
-            os.path.join(self.game.assets_dir, "sprites", "stance_3_enemy.png"))
+            os.path.join(self.game.sprite_dir, "stance_3_enemy.png"))
         self.enemy_stancebar_img_4 = pygame.image.load(
-            os.path.join(self.game.assets_dir, "sprites", "stance_4_enemy.png"))
+            os.path.join(self.game.sprite_dir, "stance_4_enemy.png"))
 
 
 
         # -- OTROS ELEMENTOS --
         # El símbolo para indicar la armadura del guerrero seleccionado y el enemigo
-        self.warrior_armor_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "armor.png"))
-        self.last_enemy_armor_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "armor_enemy.png"))
+        self.warrior_armor_img = pygame.image.load(os.path.join(self.game.sprite_dir, "armor.png"))
+        self.last_enemy_armor_img = pygame.image.load(os.path.join(self.game.sprite_dir, "armor_enemy.png"))
         # Imagen de la barra de postura debilitada
-        self.stance_weak_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "stance_weak.png"))
+        self.stance_weak_img = pygame.image.load(os.path.join(self.game.sprite_dir, "stance_weak.png"))
 
         # UI BARRAS DE SALUD
         # Barra de salud del guerrero seleccionado
@@ -600,10 +598,12 @@ class Combat(State):
                     i = 0
                 d = i // 2
                 if attacker.type == 'player':
-                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (152, 31, 48))
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                        str(d), (152, 31, 48))
                     self.damage_text_group.add(damage_text)
                 elif attacker.type == 'enemy':
-                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (152, 31, 48))
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                        str(d), (152, 31, 48))
                     self.damage_text_group.add(damage_text)
                 amount += d # Acumulamos el daño
             if attacker.type == 'player':
@@ -620,12 +620,12 @@ class Combat(State):
 
         elif judgment == "Miss":
             if target.type == 'player':
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), "MISS",
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    "MISS", (152, 31, 48))
                 self.damage_text_group.add(damage_text)
             elif target.type == 'enemy':
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), "MISS",
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    "MISS", (152, 31, 48))
                 self.damage_text_group.add(damage_text)
             print('Miss! {} failed attack'.format(attacker.name))
             self.i_message = '<b>Miss</b><br>{} failed attack<br>' \
@@ -639,10 +639,12 @@ class Combat(State):
                     i = 0
                 d = i // 2 # Con el parry recibimos la mitad del daño.
                 if target.type == 'player':
-                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (255, 190, 44))
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                        str(d), (255, 190, 44))
                     self.damage_text_group.add(damage_text)
                 elif target.type == 'enemy':
-                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (255, 190, 44))
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                        str(d), (255, 190, 44))
                     self.damage_text_group.add(damage_text)
                 amount += d  # Acumulamos el daño
             if target.type == 'player':
@@ -665,10 +667,12 @@ class Combat(State):
                     i = 0
                 d = i
                 if target.type == 'player':
-                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (251, 107, 29))
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                        str(d), (251, 107, 29))
                     self.damage_text_group.add(damage_text)
                 elif target.type == 'enemy':
-                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (251, 107, 29))
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                        str(d), (251, 107, 29))
                     self.damage_text_group.add(damage_text)
                 amount += d # Acumulamos el daño
             if target.type == 'player':
@@ -691,10 +695,12 @@ class Combat(State):
                     i = 0
                 d = i * 2 # Con critical hit se recibe el doble del daño.
                 if target.type == 'player':
-                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d), (152, 31, 48))
+                    damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                        str(d), (152, 31, 48))
                     self.damage_text_group.add(damage_text)
                 elif target.type == 'enemy':
-                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d), (152, 31, 48))
+                    damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                        str(d), (152, 31, 48))
                     self.damage_text_group.add(damage_text)
                 amount += d # Acumulamos el daño
             if target.type == 'player':
@@ -720,11 +726,11 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                recovery_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                (93, 167, 93))
+                recovery_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                      str(d), (93, 167, 93))
                 self.damage_text_group.add(recovery_text)
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d  # Acumulamos daño
             self.last_enemy.hp_current -= amount
@@ -742,8 +748,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d # Acumulamos daño
             self.last_enemy.hp_current -= amount
@@ -759,8 +765,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d # Acumulamos daño
             self.last_enemy.hp_current -= amount
@@ -776,8 +782,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
@@ -793,11 +799,11 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
-                recovery_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (93, 167, 93))
+                recovery_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                      str(d), (93, 167, 93))
                 self.damage_text_group.add(recovery_text)
                 amount += d #Acumulamos daño
             self.warrior.hp_current -= amount
@@ -815,8 +821,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d #Acumulamos daño
             self.warrior.hp_current -= amount
@@ -832,8 +838,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d  # Acumulamos daño
             self.warrior.hp_current -= amount
@@ -853,11 +859,12 @@ class Combat(State):
                     number_necrotic = 0
                 d = number
                 d_necrotic = number_necrotic
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d),(152, 31, 48))
                 self.damage_text_group.add(damage_text)
-                damage_text_necrotic = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d_necrotic),
-                                                    (105, 79, 98))
+                damage_text_necrotic = animations.DamageText(random.randint(240, 300),
+                                                             random.randint(400, 500),
+                                                             str(d_necrotic), (105, 79, 98))
                 self.damage_text_group.add(damage_text_necrotic)
                 amount += d + d_necrotic # Acumulamos daño
             self.warrior.hp_current -= amount
@@ -877,8 +884,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
@@ -894,8 +901,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
@@ -911,14 +918,15 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
             colateral_dmg = random.randint(1, 6) - self.warrior.armor  # Daño colateral sobre Ashigaru
-            damage_text_colateral = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(colateral_dmg),
-                                                (152, 31, 48))
+            damage_text_colateral = animations.DamageText(random.randint(240, 300),
+                                                          random.randint(400, 500),
+                                                          str(colateral_dmg), (152, 31, 48))
             self.damage_text_group.add(damage_text_colateral)
             self.warrior.hp_current -= colateral_dmg
             print("{} used Force and Fire".format(attacker.name))
@@ -937,11 +945,12 @@ class Combat(State):
                     number_necrotic = 0
                 d = number
                 d_necrotic = number_necrotic
-                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(300, 400), random.randint(50, 100),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
-                damage_text_necrotic = animations.DamageText(random.randint(300, 400), random.randint(50, 100), str(d_necrotic),
-                                                    (105, 79, 98))
+                damage_text_necrotic = animations.DamageText(random.randint(300, 400),
+                                                             random.randint(50, 100),
+                                                             str(d_necrotic), (105, 79, 98))
                 self.damage_text_group.add(damage_text_necrotic)
                 amount += d + d_necrotic
             self.last_enemy.hp_current -= amount
@@ -960,12 +969,12 @@ class Combat(State):
                     number_randiant = 0
                 d = number
                 d_radiant = number_randiant
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
-                damage_text_radiant = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
-                                                             str(d_radiant),
-                                                             (255, 196, 47))
+                damage_text_radiant = animations.DamageText(random.randint(240, 300),
+                                                            random.randint(400, 500),
+                                                             str(d_radiant), (255, 196, 47))
                 self.damage_text_group.add(damage_text_radiant)
                 amount += d + d_radiant #Acumulamos daño
             self.warrior.hp_current -= amount
@@ -981,8 +990,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.warrior.hp_current -= amount
@@ -998,8 +1007,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.warrior.hp_current -= amount
@@ -1015,8 +1024,8 @@ class Combat(State):
                 if number < 0:
                     number = 0
                 d = number
-                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500), str(d),
-                                                    (152, 31, 48))
+                damage_text = animations.DamageText(random.randint(240, 300), random.randint(400, 500),
+                                                    str(d), (152, 31, 48))
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.warrior.hp_current -= amount
@@ -1103,5 +1112,3 @@ class Combat(State):
 
         # Función para dibujar todos los elementos de la librería pygame_gui iniciados en __init__
         self.manager_combat.draw_ui(display)
-
-

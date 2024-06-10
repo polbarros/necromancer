@@ -12,22 +12,22 @@ class Over(State):
         State.__init__(self, game)
 
         # Establecemos el fondo del menú
-        self.menu_bg = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "game_over.png"))
+        self.menu_bg = pygame.image.load(os.path.join(self.game.sprite_dir, "game_over.png"))
         self.menu_rect = self.menu_bg.get_rect()
         self.menu_rect.center = (self.game.W // 2, self.game.H // 2)
 
         # Posibles acciones tras la derrota o el sacrificio.
         # Botón de Seppuku
-        self.seppuku_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "seppuku.png"))
+        self.seppuku_img = pygame.image.load(os.path.join(self.game.sprite_dir, "seppuku.png"))
         self.seppuku_img.set_colorkey([0, 0, 0]) # Quitar el fondo negro que ocupa el espacio de la transparencia.
-        self.seppuku_img_h = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "seppuku_h.png"))
+        self.seppuku_img_h = pygame.image.load(os.path.join(self.game.sprite_dir, "seppuku_h.png"))
         self.seppuku_img_h.set_colorkey([0, 0, 0])  # Quitar el fondo negro que ocupa el espacio de la transparencia.
         self.seppuku_button = ui.Button((self.game.W // 2) - 45, self.game.H - 425,
                                           self.seppuku_img, self.seppuku_img_h, .7)
         # Botón de invocación de un nuevo guerrero (nueva run).
-        self.retry_img = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "summon_retry.png"))
+        self.retry_img = pygame.image.load(os.path.join(self.game.sprite_dir, "summon_retry.png"))
         self.retry_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro que ocupa el espacio de la transparencia.
-        self.retry_img_h = pygame.image.load(os.path.join(self.game.assets_dir, "sprites", "summon_retry_h.png"))
+        self.retry_img_h = pygame.image.load(os.path.join(self.game.sprite_dir, "summon_retry_h.png"))
         self.retry_img_h.set_colorkey([0, 0, 0])  # Quitar el fondo negro de la transparencia.
         self.retry_button = ui.Button((self.game.W // 2) - 45, self.game.H - 320,
                                           self.retry_img, self.retry_img_h, .7)
