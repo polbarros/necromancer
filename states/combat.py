@@ -41,7 +41,7 @@ class Combat(State):
             self.warrior_stancebar_img = pygame.image.load(os.path.join(self.game.sprite_dir, "stance_1.png"))
             # Instancias de animaciones del Samurai
             self.warrior_ani_dmg = animations.Animation(-30, self.game.H - 500, "samurai_dmg")
-            self.warrior_ani_pwr = animations.Animation(self.game.W - 256, 30, "samurai_pwr")
+            self.warrior_ani_pwr = animations.Animation(self.game.W - 380, -45, "samurai_pwr")
             self.sprites.append(self.warrior_ani_dmg)
             self.sprites_att.append(self.warrior_ani_pwr)
         elif self.warrior.name == "Kunoichi":
@@ -73,7 +73,7 @@ class Combat(State):
             self.sprites_att.append(self.warrior_ani_pwr)
 
         # -- GUERRERO ENEMIGO --
-        # Datos para los enemigos: nivel y puntos de salud.
+        # Datos para los enemigos: nivel, puntos de salud y daño.
         level_enemy = random.randint(self.warrior.level, self.warrior.level + 1)
         health_enemy = random.randint(30, 35) + (self.warrior.level * 2)
         dmg_base_enemy = level_enemy // 2
@@ -131,10 +131,8 @@ class Combat(State):
         self.enemy_stancebar_img_4 = pygame.image.load(
             os.path.join(self.game.sprite_dir, "stance_4_enemy.png"))
 
-
-
         # -- OTROS ELEMENTOS --
-        # El símbolo para indicar la armadura del guerrero seleccionado y el enemigo
+        # El símbolo para indicar la armadura del guerrero seleccionado y del enemigo
         self.warrior_armor_img = pygame.image.load(os.path.join(self.game.sprite_dir, "armor.png"))
         self.last_enemy_armor_img = pygame.image.load(os.path.join(self.game.sprite_dir, "armor_enemy.png"))
         # Imagen de la barra de postura debilitada
@@ -147,7 +145,7 @@ class Combat(State):
             manager=self.manager_combat,
             percent_method=self.calculate_health_percent,
             object_id='#warrior_health_bar')
-
+        # Barra de salud del último enemigo
         self.last_enemy_health_bar = pygame_gui.elements.ui_status_bar.UIStatusBar(
             relative_rect=pygame.Rect((28, 93), (170, 24)),
             manager=self.manager_combat,
@@ -199,6 +197,7 @@ class Combat(State):
                                                             manager=self.manager_combat,
                                                         tool_tip_text="Throw a bomb\n(30-50 dmg)",
                                                             object_id='#button_bomb')
+        # Animación propia del ataque bomba
         self.bomb_ani = animations.Animation(self.game.W - 256, 0, "bomb")
         self.sprites_att.append(self.bomb_ani)
 
@@ -273,10 +272,6 @@ class Combat(State):
 
     def update(self, delta_time):
 
-        # Toma de la información de la BD sobre el último enemigo generado
-        self.last_enemy = db.session.query(models.Warrior).filter_by(type="enemy").order_by(
-            desc(models.Warrior.id)).first()
-
         # Actualizador del manager de los elementos pygame_gui
         self.manager_combat.update(delta_time)
 
@@ -320,6 +315,7 @@ class Combat(State):
         # Actualiza la barra de salud del guerrero seleccionado
         self.warrior_health_bar.update(delta_time)
 
+        # -- LÓGICA DEL COMBATE --
         if self.warrior.hp_current > 0 and self.last_enemy.hp_current > 0:
             # Mientras los puntos de guerrero seleccionado y el último enemigo sean superiores a 0.
             if self.ends_enemy == True and self.ends_player == False and self.space_key == False:
@@ -352,7 +348,7 @@ class Combat(State):
         elif self.last_enemy.hp_current <= 0 and self.space_key == True:
             self.i_message = ''
             self.text_box.hide()  # Escondemos la caja de texto
-            db.session.commit()
+            db.session.commit() # Guardamos session de la BD.
             new_state = Reward(self.game)  # Creamos un objeto de la clase estado de recompensa.
             new_state.enter_state()  # El nuevo estado se añade a la pila de estados.
 
@@ -398,12 +394,13 @@ class Combat(State):
             self.message(self.i_message)
 
         elif self.warrior.bomb >= 1 and self.button_bomb.check_pressed():
+            self.last_enemy_ani_dmg.animate()  # Animación de daño
             self.bomb_ani.animate()  # Animación de bomba
             self.last_enemy.hp_current -= random.randint(30, 50)  # El enemigo pierde mucha vida.
             self.disable_buttons()  # Deshabilitamos botones para el jugador.
             self.warrior.bomb -= 1
             self.ends_player, self.ends_enemy = True, False
-            self.i_message = '{} trowed a bomb<br>[SPACE] to continue'.format(self.warrior.name)
+            self.i_message = '{} threw a bomb<br>[SPACE] to continue'.format(self.warrior.name)
             self.message(self.i_message)
 
         elif self.warrior.stance_recovery >= 1 and self.warrior.stance_weak and self.button_r_stance.check_pressed():
@@ -454,8 +451,6 @@ class Combat(State):
             self.receive_attack(self.warrior, self.roll)
             self.roll_damage(self.last_enemy)
             self.get_damage(self.last_enemy, self.warrior, self.judgment, self.list_dices)
-
-
 
         self.ends_player, self.ends_enemy = False, True
 
@@ -584,7 +579,7 @@ class Combat(State):
         return self.list_dices
 
     def get_damage(self, attacker, target, judgment, dices):
-        """Función para calcular y ejecutar los daños sobre el personaje objetivo en dependiendo de:
+        """Función para calcular y ejecutar los daños sobre el personaje objetivo (ataques normales) dependiendo de:
         - Atacante
         - Resultado de la tirada de ataque contra la postura del objetivo
         - Lista de resultados de las tiradas de dados de daño"""
@@ -716,7 +711,7 @@ class Combat(State):
                                       '[SPACE]to continue'.format(target.name, amount)
 
     def str_attack(self, attacker):
-        """Función para ejecutar el ataque estratégico que conlleva distintos efectos en el atacante y en el objetivo,
+        """Función para ejecutar el ataque ESTRATÉGICO que conlleva distintos efectos en el atacante y en el objetivo,
         sin depender de la tirada de ataque del atacante y la postura del objetivo."""
 
         if attacker.name == "Samurai":
@@ -735,6 +730,8 @@ class Combat(State):
                 amount += d  # Acumulamos daño
             self.last_enemy.hp_current -= amount
             self.warrior.hp_current += amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             if self.warrior.hp_current > self.warrior.hp_max:
                 self.warrior.hp_current = self.warrior.hp_max
             print("{} used Vampire Slash and recovered {} HP".format(attacker.name, amount))
@@ -753,6 +750,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d # Acumulamos daño
             self.last_enemy.hp_current -= amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             self.last_enemy.stance_weak = True # Debilita la postura del enemigo
             print("{} used Fatal Flaw and weakened the enemy's stance".format(attacker.name))
             self.i_message = '{} used Fatal Flaw and weakened the enemy\'s stance<br>' \
@@ -770,6 +769,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d # Acumulamos daño
             self.last_enemy.hp_current -= amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             self.warrior.stance_weak = True  # Debilita la postura del guerrero seleccionado
             print("{} used Direct Shot and weakened its own stance".format(attacker.name))
             self.i_message = '{} used Direct Shot and weakened its own stance<br>' \
@@ -787,6 +788,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             self.last_enemy.attack_roll = 12 # Reduce el dado de tirada de ataque del enemigo.
             print("{} used Curse of Revenge and weakened enemy's roll attack".format(attacker.name))
             self.i_message = '{} used Curse of Revenge and weakened enemy\'s roll attack<br>' \
@@ -808,6 +811,8 @@ class Combat(State):
                 amount += d #Acumulamos daño
             self.warrior.hp_current -= amount
             self.last_enemy.hp_current += amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             if self.last_enemy.hp_current > self.last_enemy.hp_max:
                 self.last_enemy.hp_current = self.last_enemy.hp_max
             print("{} used Stream of Light and recovered {} HP".format(attacker.name, amount))
@@ -826,6 +831,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d #Acumulamos daño
             self.warrior.hp_current -= amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             self.warrior.stance_weak = True
             print("{} used Stunner Cut and weakened warrior's stance".format(attacker.name))
             self.i_message = '{} used Stunner Cut and weakened warrior\'s stance<br>' \
@@ -843,6 +850,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d  # Acumulamos daño
             self.warrior.hp_current -= amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             self.warrior.attack_roll = 12
             print("{} used Caltrops and weakened warrior's roll attack".format(attacker.name))
             self.i_message = '{} used Caltrops and weakened warrior\'s roll attack<br>' \
@@ -868,12 +877,14 @@ class Combat(State):
                 self.damage_text_group.add(damage_text_necrotic)
                 amount += d + d_necrotic # Acumulamos daño
             self.warrior.hp_current -= amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             print("{} used Terrible Jaws".format(attacker.name))
             self.i_message = '{} used Terrible Jaws<br>' \
                              '[SPACE] to continue'.format(attacker.name)
 
     def pwr_attack(self, attacker):
-        """Función para ejecutar el ataque poderoso que conlleva distintos efectos en el atacante y en el objetivo,
+        """Función para ejecutar el ataque PODEROSO que conlleva distintos efectos en el atacante y en el objetivo,
         sin depender de la tirada de ataque del atacante y la postura del objetivo."""
 
         if attacker.name == "Samurai":
@@ -889,6 +900,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             print("{} used Triple Death".format(attacker.name))
             self.i_message = '{} used Triple Death<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -906,6 +919,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             print("{} used Wasp Rain".format(attacker.name))
             self.i_message = '{} used Wasp Rain<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -923,12 +938,16 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.last_enemy.hp_current -= amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             colateral_dmg = random.randint(1, 6) - self.warrior.armor  # Daño colateral sobre Ashigaru
             damage_text_colateral = animations.DamageText(random.randint(240, 300),
                                                           random.randint(400, 500),
                                                           str(colateral_dmg), (152, 31, 48))
             self.damage_text_group.add(damage_text_colateral)
             self.warrior.hp_current -= colateral_dmg
+            if colateral_dmg > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             print("{} used Force and Fire".format(attacker.name))
             self.i_message = '{} used Force and Fire<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -954,6 +973,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text_necrotic)
                 amount += d + d_necrotic
             self.last_enemy.hp_current -= amount
+            if amount > 0:
+                self.last_enemy_ani_dmg.animate()  # Animación de daño
             print("{} used Putrid Bite".format(attacker.name))
             self.i_message = '{} used Putrid Bite<br>' \
                              '[SPACE] to continue'.format(attacker.name)
@@ -978,6 +999,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text_radiant)
                 amount += d + d_radiant #Acumulamos daño
             self.warrior.hp_current -= amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             self.last_enemy.armor += 3
             print("{} used Radiant Double Arrow".format(attacker.name))
             self.i_message = '{} used Radiant Double Arrow<br>' \
@@ -995,6 +1018,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.warrior.hp_current -= amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             self.warrior.stance_weak = True
             print("{} used Crossed Strikes".format(attacker.name))
             self.i_message = '{} used Crossed Strikes<br>' \
@@ -1012,6 +1037,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.warrior.hp_current -= amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             self.warrior.stance_weak = True
             print("{} used Weakener Stab".format(attacker.name))
             self.i_message = '{} used Weakener Stab<br>' \
@@ -1029,6 +1056,8 @@ class Combat(State):
                 self.damage_text_group.add(damage_text)
                 amount += d
             self.warrior.hp_current -= amount
+            if amount > 0:
+                self.warrior_ani_dmg.animate()  # Animación de daño
             print("{} used Shell Hits".format(attacker.name))
             self.i_message = '{} used Shell Hits<br>' \
                              '[SPACE] to continue'.format(attacker.name)

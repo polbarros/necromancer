@@ -18,7 +18,7 @@ class Reward(State):
         self.menu_rect = self.menu_bg.get_rect()
         self.menu_rect.center = (self.game.W // 2, self.game.H // 2)
 
-        #Posibles recompensas
+        # -- POSIBLES RECOMPENSAS --
         #Botón de recompensa ofensiva
         self.offensive_img = pygame.image.load(os.path.join(self.game.sprite_dir, "offensive.png"))
         self.offensive_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro que ocupa el espacio de la transparencia.
@@ -71,14 +71,14 @@ class Reward(State):
         self.lvl_text = ""
 
     def lvl_up(self, exp):
-        #Función para hacer subir el nivel del guerrero seleccionado, dependiendo de la vida máxima último enemigo.
+        #Función para hacer subir el nivel del guerrero seleccionado, dependiendo de la vida máxima enemigo derrotado.
         for i in range(exp):
             self.warrior.exp += 1
             if self.warrior.exp %100 == 0:
                 self.lvl_text = "Level Up!"
                 self.warrior.level += 1
 
-        db.session.commit()
+        db.session.commit() # Guardamos la session de la BD para reflejar cambios.
 
     def update(self, delta_time):
         if self.offensive_button.action():
@@ -94,7 +94,7 @@ class Reward(State):
                 self.warrior.roll_recovery += 1
             else:
                 pass
-            self.come_back()
+            self.come_back() #Tras escoger recompensa ofensiva volvemos al combate para seguir el juego.
         elif self.defensive_button.action():
             if self.defensive_offer == 1:
                 self.warrior.hp_max += 10
@@ -108,7 +108,7 @@ class Reward(State):
                 self.warrior.stance_recovery += 1
             else:
                 pass
-            self.come_back()
+            self.come_back() #Tras escoger recompensa defensiva volvemos al combate para seguir el juego.
 
     def come_back(self):
         db.session.commit() # Guardamos los datos en la BD

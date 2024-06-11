@@ -151,7 +151,7 @@ class Animation(pygame.sprite.Sprite):
         self.is_animating = True
 
     def update(self, speed):
-        if self.is_animating == True:
+        if self.is_animating:
             self.current_sprite += speed
 
             if self.current_sprite >= len(self.sprites):
@@ -162,7 +162,7 @@ class Animation(pygame.sprite.Sprite):
 
 class DamageText(pygame.sprite.Sprite):
     """Esta clase nos permite crear varios objetos temporales para mostrar textos animados en pantalla que representen
-    el daño inflingido al personaje."""
+    el daño infligido al personaje."""
     def __init__(self, pos_x, pos_y, damage, color):
         pygame.sprite.Sprite.__init__(self)
         # Creamos punteros a carpetas y subcarpetas con los archivos de assets para la fuente.

@@ -59,7 +59,6 @@ class Over(State):
             pass
         return self.necromancer.max_score
 
-
     def update(self, delta_time):
         if self.seppuku_button.action():
             db.session.query(models.Warrior).delete()  # Borramos los datos en la BD
