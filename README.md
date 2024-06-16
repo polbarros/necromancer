@@ -47,5 +47,11 @@ source venv/bin/activate  # In Windows use `venv\Scripts\activate`
 pip install -r requirements.txt
 ```
 
+### Use
+Once you installed all the files, you can run the game
+```bash
+python game.py
+```
+
 ### Author
 Pol Barrós
