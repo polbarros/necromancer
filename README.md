@@ -20,4 +20,32 @@ To achieve this goal, Necromancer has reduced window dimensions, a vertical aspe
 by the player, as it consists of consecutive turn-based duels, whose action does not advance unless the player desires it.
 
 In Necromancer, the player must take on the role of a dark wizard capable of reviving warriors fallen in battle 
-to continue fighting against the Shogun's servants and forest creatures. After choosing one of four possible warriors, the player progresses through a series of duels where they will test their strategic abilities, the unique skills of the undead they control, and the luck provided by the dice. After each victory, the player is rewarded with prizes that allow them to improve their offensive or defensive conditions and thus defeat as many enemies as possible.
+to continue fighting against the Shogun's servants and forest creatures. After choosing one of four possible warriors, 
+the player progresses through a series of duels where they will test their strategic abilities, the unique skills of 
+the undead they control, and the luck provided by the dice. After each victory, the player is rewarded with prizes that 
+allow them to improve their offensive or defensive conditions and thus defeat as many enemies as possible.
+
+### Requirements
+SQLAlchemy~=2.0.22 
+
+pygame~=2.5.2
+
+### Installation
+
+1. Clone this repository:
+```bash
+git clone https://github.com/polbarros/necromancer.git
+cd necromancer
+```
+2. Create a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # In Windows use `venv\Scripts\activate`
+```
+3. Install requirements:
+```bash
+pip install -r requirements.txt
+```
+
+### Author
+Pol Barrós
