@@ -10,11 +10,11 @@ from states.title import Title
 
 
 class Game():
-    '''El proposito de esta clase es encapsular todos los elementos recursivos que se desarrollan en el juego.
+    """El proposito de esta clase es encapsular todos los elementos recursivos que se desarrollan en el juego.
      Consideramos que un juego siempre desarrolla un loop basado en:
       > Entrada/recogida de eventos
       > Actualización de datos
-      > Representación gráfica de los elementos implicados que deben ser visualizados por el jugador.'''
+      > Representación gráfica de los elementos implicados que deben ser visualizados por el jugador."""
     def __init__(self):
         pygame.init() # Iniciación del framework PyGame
         # Establecemos unas constantes para el ancho y el alto de la ventana principal y el canvas.

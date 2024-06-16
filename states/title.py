@@ -8,7 +8,7 @@ class Title(State):
     def __init__(self, game):
         State.__init__(self, game) # Tomamos la inicialización de la superclase State.
 
-        # Imágen de fondo
+        # Imagen de fondo
         self.background_img = pygame.image.load(os.path.join(self.game.sprite_dir, "bg_samurai.png"))
         self.title_img = pygame.image.load(os.path.join(self.game.sprite_dir, "title_necromancer.png"))
         self.start_button_img = pygame.image.load(os.path.join(self.game.sprite_dir, "start_normal.png"))
@@ -29,7 +29,7 @@ class Title(State):
         display.fill((197, 178, 189))
         # Imágen de samurai
         display.blit(self.background_img, (0, - 40))
-        # Imágen de título
+        # Imagen de título
         display.blit(self.title_img, (0, 477))
-        # Imágen del botón START
+        # Imagen del botón START
         self.start_button.draw(display)

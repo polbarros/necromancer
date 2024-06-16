@@ -34,7 +34,7 @@ class Combat(State):
         # Toma de la información de la BD sobre el guerrero escogido
         self.warrior = db.session.query(models.Warrior).filter_by(type="player").first()
 
-        # Imágen y animaciones del guerrero escogido
+        # Imagen y animaciones del guerrero escogido
         if self.warrior.name == "Samurai":
             self.warrior_img = pygame.image.load(os.path.join(self.game.sprite_dir, "samurai.png"))
             self.warrior_img.set_colorkey([0, 0, 0])  # Quitar el fondo negro.
